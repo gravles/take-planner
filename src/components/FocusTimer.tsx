@@ -9,8 +9,18 @@ interface FocusTimerProps {
 }
 
 export function FocusTimer({ activeTask, onClose }: FocusTimerProps) {
-    const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
+    // Default to 25 minutes if no task or duration, otherwise use task duration
+    const initialTime = activeTask?.duration_minutes ? activeTask.duration_minutes * 60 : 25 * 60;
+    const [timeLeft, setTimeLeft] = useState(initialTime);
     const [isActive, setIsActive] = useState(false);
+
+    // Reset timer when activeTask changes
+    useEffect(() => {
+        if (activeTask?.duration_minutes) {
+            setTimeLeft(activeTask.duration_minutes * 60);
+            setIsActive(false);
+        }
+    }, [activeTask]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -30,7 +40,7 @@ export function FocusTimer({ activeTask, onClose }: FocusTimerProps) {
     const toggleTimer = () => setIsActive(!isActive);
     const resetTimer = () => {
         setIsActive(false);
-        setTimeLeft(25 * 60);
+        setTimeLeft(activeTask?.duration_minutes ? activeTask.duration_minutes * 60 : 25 * 60);
     };
 
     const formatTime = (seconds: number) => {

@@ -44,7 +44,6 @@ export function CalendarView({ tasks, onFocus, onEdit }: CalendarViewProps) {
             <div className="relative border rounded-xl bg-gray-50 min-h-[800px]">
                 {hours.map(hour => {
                     // Find tasks scheduled for this hour
-                    // Note: This is a simplified check. Real app needs proper date comparison
                     const slotTasks = tasks.filter(t => {
                         if (!t.scheduled_at) return false;
                         const date = new Date(t.scheduled_at);
@@ -53,25 +52,26 @@ export function CalendarView({ tasks, onFocus, onEdit }: CalendarViewProps) {
 
                     return (
                         <CalendarSlot key={hour} hour={hour}>
-                            {slotTasks.map(task => {
-                                // Calculate height: 1 minute = 2px (so 60 mins = 120px)
-                                // Standard slot is 80px (h-20), so we need to adjust scale or slot height.
-                                // Let's make the slot height taller to accommodate: h-32 (128px) for 1 hour?
-                                // Or keep h-20 (80px) and map 60mins -> 80px.
-                                // 1 min = 80/60 = 1.33px.
-
-                                const height = Math.max(40, (task.duration_minutes / 60) * 80); // Min height 40px
+                            {slotTasks.map((task, index) => {
+                                // Calculate height: 1 minute = 1.33px (80px / 60min)
+                                const height = Math.max(32, (task.duration_minutes / 60) * 80);
                                 const date = new Date(task.scheduled_at!);
                                 const minutes = date.getMinutes();
                                 const top = (minutes / 60) * 80;
 
+                                // Side-by-side logic
+                                const widthPercent = 100 / slotTasks.length;
+                                const leftPercent = index * widthPercent;
+
                                 return (
                                     <div
                                         key={task.id}
-                                        className="absolute inset-x-1 z-10"
+                                        className="absolute z-10 px-1 transition-all duration-200"
                                         style={{
                                             height: `${height}px`,
-                                            top: `${top}px`
+                                            top: `${top}px`,
+                                            width: `${widthPercent}%`,
+                                            left: `${leftPercent}%`
                                         }}
                                     >
                                         <TaskCard task={task} onFocus={onFocus} onEdit={onEdit} />
