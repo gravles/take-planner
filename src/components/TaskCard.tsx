@@ -1,5 +1,5 @@
 import { Task } from '@/types';
-import { Clock, AlertCircle, Play, Pencil, CheckCircle } from 'lucide-react';
+import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
 
