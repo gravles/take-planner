@@ -52,6 +52,48 @@ export function CalendarView({ tasks, onFocus, onEdit }: CalendarViewProps) {
                         if (!t.scheduled_at) return false;
                         const date = new Date(t.scheduled_at);
                         return date.getHours() === hour;
+                    });
+
+                    return (
+                        <CalendarSlot key={hour} hour={hour}>
+                            {slotTasks.map((task, index) => {
+                                // Calculate height: 1 minute = 2px (120px / 60min)
+                                // Min height 20px for short tasks
+                                const height = Math.max(20, task.duration_minutes * 2);
+                                const date = new Date(task.scheduled_at!);
+                                const minutes = date.getMinutes();
+                                const top = minutes * 2;
+
+                                // Side-by-side logic
+                                const widthPercent = 100 / slotTasks.length;
+                                const leftPercent = index * widthPercent;
+
+                                // Use compact mode if task is less than 30 minutes
+                                const isCompact = task.duration_minutes < 30;
+
+                                return (
+                                    <div
+                                        key={task.id}
+                                        className="absolute z-10 px-1 transition-all duration-200"
+                                        style={{
+                                            height: `${height}px`,
+                                            top: `${top}px`,
+                                            width: `${widthPercent}%`,
+                                            left: `${leftPercent}%`
+                                        }}
+                                    >
+                                        <TaskCard
+                                            task={task}
+                                            onFocus={onFocus}
+                                            onEdit={onEdit}
+                                            isCompact={isCompact}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </CalendarSlot>
+                    );
+                })}
             </div>
         </div>
     );
