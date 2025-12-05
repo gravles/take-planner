@@ -4,7 +4,7 @@ import { TaskBench } from '@/components/TaskBench';
 import { CalendarView } from '@/components/CalendarView';
 import { useTasks } from '@/hooks/useTasks';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { TaskCard } from '@/components/TaskCard';
 import { Task } from '@/types';
@@ -17,6 +17,7 @@ export default function Home() {
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -28,7 +29,16 @@ export default function Home() {
 
   // Separate tasks into bench (unscheduled) and calendar (scheduled)
   const benchTasks = tasks.filter(t => !t.scheduled_at);
-  const scheduledTasks = tasks.filter(t => t.scheduled_at);
+
+  const scheduledTasks = tasks.filter(t => {
+    if (!t.scheduled_at) return false;
+    const taskDate = new Date(t.scheduled_at);
+    return (
+      taskDate.getDate() === currentDate.getDate() &&
+      taskDate.getMonth() === currentDate.getMonth() &&
+      taskDate.getFullYear() === currentDate.getFullYear()
+    );
+  });
 
   const handleCreateTask = () => {
     setIsModalOpen(true);
@@ -61,8 +71,8 @@ export default function Home() {
     if (overId.startsWith('slot-')) {
       const hour = over.data.current?.hour;
       if (typeof hour === 'number') {
-        const now = new Date();
-        const scheduledAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, 0, 0);
+        const scheduledAt = new Date(currentDate);
+        scheduledAt.setHours(hour, 0, 0, 0);
 
         await updateTask(taskId, { scheduled_at: scheduledAt.toISOString() });
       }
@@ -84,7 +94,26 @@ export default function Home() {
 
         <div className="flex-1 flex flex-col h-screen relative">
           <header className="h-16 border-b flex items-center justify-between px-6 bg-white shrink-0">
-            <h1 className="text-xl font-bold text-gray-800">My Planner</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold text-gray-800">My Planner</h1>
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
+                  className="p-1 hover:bg-white rounded-md transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-medium w-32 text-center">
+                  {currentDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                </span>
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
+                  className="p-1 hover:bg-white rounded-md transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
             <button
               onClick={handleCreateTask}
               className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"

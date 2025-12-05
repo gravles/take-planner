@@ -7,7 +7,20 @@ export function useTasks() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchTasks();
+        const initAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                // Try to sign in anonymously
+                const { error } = await supabase.auth.signInAnonymously();
+                if (error) {
+                    console.error('Error signing in anonymously:', error);
+                    // Fallback: If anon sign-in is disabled, we might need to ask user to enable it
+                    // or use a public policy. For now, we'll log it.
+                }
+            }
+            fetchTasks();
+        };
+        initAuth();
     }, []);
 
     async function fetchTasks() {
@@ -46,6 +59,7 @@ export function useTasks() {
             }
         } catch (error) {
             console.error('Error adding task:', error);
+            alert('Failed to add task. Please check if you are signed in or if RLS policies allow access.');
         }
     }
 
