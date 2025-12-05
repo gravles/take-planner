@@ -95,9 +95,29 @@ export default function Home() {
       const hour = over.data.current?.hour;
       if (typeof hour === 'number') {
         const scheduledAt = new Date(currentDate);
-        scheduledAt.setHours(hour, 0, 0, 0);
 
-        await updateTask(taskId, { scheduled_at: scheduledAt.toISOString() });
+        // Calculate minutes based on drop position
+        // We need the Y coordinate relative to the droppable container
+        // dnd-kit provides `delta` (change in position) but not relative offset directly in `over`.
+        // However, we can use the `active.rect` and `over.rect` to find the relative position.
+
+        const overRect = over.rect;
+        const activeRect = active.rect.current.translated;
+
+        if (overRect && activeRect) {
+          const relativeY = activeRect.top - overRect.top;
+          const slotHeight = 120; // Must match CalendarView height
+
+          // Calculate raw minutes: (relativeY / slotHeight) * 60
+          // Clamp between 0 and 55 to stay within the hour
+          let minutes = Math.max(0, Math.min(55, (relativeY / slotHeight) * 60));
+
+          // Round to nearest 5 minutes
+          minutes = Math.round(minutes / 5) * 5;
+
+          scheduledAt.setHours(hour, minutes, 0, 0);
+          await updateTask(taskId, { scheduled_at: scheduledAt.toISOString() });
+        }
       }
     }
   };
