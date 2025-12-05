@@ -8,10 +8,11 @@ interface TaskCardProps {
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
+    onUnschedule?: (task: Task) => void;
     isCompact?: boolean;
 }
 
-export function TaskCard({ task, onFocus, onEdit, onToggleComplete, isCompact }: TaskCardProps) {
+export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule, isCompact }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: task,
@@ -65,6 +66,16 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, isCompact }:
 
                 {onFocus && !isCompleted && (
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/50 rounded px-1 ml-2">
+                        {onUnschedule && task.scheduled_at && (
+                            <button
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => onUnschedule(task)}
+                                className="p-0.5 hover:text-orange-600 transition-colors"
+                                title="Unschedule (Move to Bench)"
+                            >
+                                <MinusCircle className="w-2.5 h-2.5" />
+                            </button>
+                        )}
                         {onEdit && (
                             <button
                                 onPointerDown={(e) => e.stopPropagation()}
@@ -125,6 +136,16 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, isCompact }:
                 </div>
                 {onFocus && (
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onUnschedule && task.scheduled_at && (
+                            <button
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => onUnschedule(task)}
+                                className="p-1 hover:bg-orange-50 rounded-full text-gray-600 hover:text-orange-600 transition-colors"
+                                title="Unschedule (Move to Bench)"
+                            >
+                                <MinusCircle className="w-3 h-3" />
+                            </button>
+                        )}
                         {onEdit && (
                             <button
                                 onPointerDown={(e) => e.stopPropagation()}
