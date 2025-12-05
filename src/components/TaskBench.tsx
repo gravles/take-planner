@@ -28,7 +28,13 @@ export function TaskBench({ tasks, onFocus, onEdit }: TaskBenchProps) {
                     <p className="text-sm text-gray-500 text-center py-8">No unplanned tasks</p>
                 ) : (
                     tasks.map(task => (
-                        <TaskCard key={task.id} task={task} onFocus={onFocus} onEdit={onEdit} />
+                        <TaskCard
+                            key={task.id}
+                            task={task}
+                            onFocus={onFocus}
+                            onEdit={onEdit}
+                            onToggleComplete={onToggleComplete}
+                        />
                     ))
                 )}
             </div>

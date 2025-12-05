@@ -3,8 +3,9 @@
 import { TaskBench } from '@/components/TaskBench';
 import { CalendarView } from '@/components/CalendarView';
 import { useTasks } from '@/hooks/useTasks';
+import { TaskListView } from '@/components/TaskListView';
 import { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { TaskCard } from '@/components/TaskCard';
 import { Task } from '@/types';
@@ -19,6 +20,12 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+
+  const handleToggleComplete = async (task: Task) => {
+    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+    await updateTask(task.id, { status: newStatus });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -133,27 +140,54 @@ export default function Home() {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <main className="flex h-screen overflow-hidden bg-white">
-        <TaskBench tasks={benchTasks} onFocus={setFocusTask} onEdit={handleEditTask} />
+        {viewMode === 'calendar' && (
+          <TaskBench
+            tasks={benchTasks}
+            onFocus={setFocusTask}
+            onEdit={handleEditTask}
+            onToggleComplete={handleToggleComplete}
+          />
+        )}
 
         <div className="flex-1 flex flex-col h-screen relative">
           <header className="h-16 border-b flex items-center justify-between px-6 bg-white shrink-0">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-bold text-gray-800">My Planner</h1>
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+
+              {viewMode === 'calendar' && (
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
+                    className="p-1 hover:bg-white rounded-md transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-medium w-32 text-center">
+                    {currentDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                  </span>
+                  <button
+                    onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
+                    className="p-1 hover:bg-white rounded-md transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 ml-4">
                 <button
-                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
-                  className="p-1 hover:bg-white rounded-md transition-colors"
+                  onClick={() => setViewMode('calendar')}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  title="Calendar View"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <Calendar className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-medium w-32 text-center">
-                  {currentDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                </span>
                 <button
-                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
-                  className="p-1 hover:bg-white rounded-md transition-colors"
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  title="List View"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <LayoutList className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -166,7 +200,21 @@ export default function Home() {
             </button>
           </header>
 
-          <CalendarView tasks={scheduledTasks} onFocus={setFocusTask} onEdit={handleEditTask} />
+          {viewMode === 'calendar' ? (
+            <CalendarView
+              tasks={scheduledTasks}
+              onFocus={setFocusTask}
+              onEdit={handleEditTask}
+              onToggleComplete={handleToggleComplete}
+            />
+          ) : (
+            <TaskListView
+              tasks={tasks}
+              onFocus={setFocusTask}
+              onEdit={handleEditTask}
+              onToggleComplete={handleToggleComplete}
+            />
+          )}
         </div>
       </main>
 
