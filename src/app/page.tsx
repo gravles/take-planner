@@ -16,6 +16,7 @@ export default function Home() {
   const { tasks, loading, addTask, updateTask } = useTasks();
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -41,7 +42,29 @@ export default function Home() {
   });
 
   const handleCreateTask = () => {
+    setEditingTask(null);
     setIsModalOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveTask = async (taskData: Partial<Task>) => {
+    let success = false;
+    if (editingTask) {
+      success = await updateTask(editingTask.id, taskData) || false;
+    } else {
+      success = await addTask(taskData as any) || false;
+    }
+
+    if (success) {
+      setIsModalOpen(false);
+      setEditingTask(null);
+    } else {
+      alert('Failed to save task. Check console for details.');
+    }
   };
 
   const handleDragStart = (event: any) => {
@@ -90,7 +113,7 @@ export default function Home() {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <main className="flex h-screen overflow-hidden bg-white">
-        <TaskBench tasks={benchTasks} onFocus={setFocusTask} />
+        <TaskBench tasks={benchTasks} onFocus={setFocusTask} onEdit={handleEditTask} />
 
         <div className="flex-1 flex flex-col h-screen relative">
           <header className="h-16 border-b flex items-center justify-between px-6 bg-white shrink-0">
@@ -123,7 +146,7 @@ export default function Home() {
             </button>
           </header>
 
-          <CalendarView tasks={scheduledTasks} onFocus={setFocusTask} />
+          <CalendarView tasks={scheduledTasks} onFocus={setFocusTask} onEdit={handleEditTask} />
         </div>
       </main>
 
@@ -131,12 +154,13 @@ export default function Home() {
         {activeTask ? <TaskCard task={activeTask} /> : null}
       </DragOverlay>
 
-      {focusTask && <FocusTimer activeTask={focusTask} />}
+      {focusTask && <FocusTimer activeTask={focusTask} onClose={() => setFocusTask(null)} />}
 
       <CreateTaskModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={addTask}
+        onSave={handleSaveTask}
+        initialTask={editingTask}
       />
 
       <NotificationManager tasks={tasks} />

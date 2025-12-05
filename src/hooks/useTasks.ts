@@ -14,8 +14,6 @@ export function useTasks() {
                 const { error } = await supabase.auth.signInAnonymously();
                 if (error) {
                     console.error('Error signing in anonymously:', error);
-                    // Fallback: If anon sign-in is disabled, we might need to ask user to enable it
-                    // or use a public policy. For now, we'll log it.
                 }
             }
             fetchTasks();
@@ -56,10 +54,11 @@ export function useTasks() {
 
             if (data) {
                 setTasks([data, ...tasks]);
+                return true;
             }
         } catch (error) {
             console.error('Error adding task:', error);
-            alert('Failed to add task. Please check if you are signed in or if RLS policies allow access.');
+            return false;
         }
     }
 
@@ -73,8 +72,10 @@ export function useTasks() {
             if (error) throw error;
 
             setTasks(tasks.map(t => (t.id === id ? { ...t, ...updates } : t)));
+            return true;
         } catch (error) {
             console.error('Error updating task:', error);
+            return false;
         }
     }
 

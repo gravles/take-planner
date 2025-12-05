@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface CalendarViewProps {
     tasks: Task[];
     onFocus?: (task: Task) => void;
+    onEdit?: (task: Task) => void;
 }
 
 function CalendarSlot({ hour, children }: { hour: number; children?: React.ReactNode }) {
@@ -32,7 +33,7 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     );
 }
 
-export function CalendarView({ tasks, onFocus }: CalendarViewProps) {
+export function CalendarView({ tasks, onFocus, onEdit }: CalendarViewProps) {
     // Generate time slots from 8 AM to 8 PM
     const hours = Array.from({ length: 13 }, (_, i) => i + 8);
 
@@ -52,11 +53,31 @@ export function CalendarView({ tasks, onFocus }: CalendarViewProps) {
 
                     return (
                         <CalendarSlot key={hour} hour={hour}>
-                            {slotTasks.map(task => (
-                                <div key={task.id} className="absolute inset-x-1 top-1 z-10">
-                                    <TaskCard task={task} onFocus={onFocus} />
-                                </div>
-                            ))}
+                            {slotTasks.map(task => {
+                                // Calculate height: 1 minute = 2px (so 60 mins = 120px)
+                                // Standard slot is 80px (h-20), so we need to adjust scale or slot height.
+                                // Let's make the slot height taller to accommodate: h-32 (128px) for 1 hour?
+                                // Or keep h-20 (80px) and map 60mins -> 80px.
+                                // 1 min = 80/60 = 1.33px.
+
+                                const height = Math.max(40, (task.duration_minutes / 60) * 80); // Min height 40px
+                                const date = new Date(task.scheduled_at!);
+                                const minutes = date.getMinutes();
+                                const top = (minutes / 60) * 80;
+
+                                return (
+                                    <div
+                                        key={task.id}
+                                        className="absolute inset-x-1 z-10"
+                                        style={{
+                                            height: `${height}px`,
+                                            top: `${top}px`
+                                        }}
+                                    >
+                                        <TaskCard task={task} onFocus={onFocus} onEdit={onEdit} />
+                                    </div>
+                                );
+                            })}
                         </CalendarSlot>
                     );
                 })}

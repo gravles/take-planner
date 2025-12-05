@@ -1,14 +1,15 @@
 import { Task } from '@/types';
-import { Clock, AlertCircle, Play } from 'lucide-react';
+import { Clock, AlertCircle, Play, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
 
 interface TaskCardProps {
     task: Task;
     onFocus?: (task: Task) => void;
+    onEdit?: (task: Task) => void;
 }
 
-export function TaskCard({ task, onFocus }: TaskCardProps) {
+export function TaskCard({ task, onFocus, onEdit }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: task,
@@ -49,14 +50,26 @@ export function TaskCard({ task, onFocus }: TaskCardProps) {
                     </div>
                 </div>
                 {onFocus && (
-                    <button
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={() => onFocus(task)}
-                        className="p-1 hover:bg-white/50 rounded-full text-gray-600 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100"
-                        title="Start Focus"
-                    >
-                        <Play className="w-3 h-3 fill-current" />
-                    </button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onEdit && (
+                            <button
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => onEdit(task)}
+                                className="p-1 hover:bg-gray-100 rounded-full text-gray-600 hover:text-black transition-colors"
+                                title="Edit Task"
+                            >
+                                <Pencil className="w-3 h-3" />
+                            </button>
+                        )}
+                        <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={() => onFocus(task)}
+                            className="p-1 hover:bg-blue-50 rounded-full text-gray-600 hover:text-blue-600 transition-colors"
+                            title="Start Focus"
+                        >
+                            <Play className="w-3 h-3 fill-current" />
+                        </button>
+                    </div>
                 )}
             </div>
         </div>

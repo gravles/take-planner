@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils';
 
 interface TaskBenchProps {
     tasks: Task[];
-    onFocus?: (task: Task) => void;
+    onFocus: (task: Task) => void;
+    onEdit: (task: Task) => void;
 }
 
-export function TaskBench({ tasks, onFocus }: TaskBenchProps) {
+export function TaskBench({ tasks, onFocus, onEdit }: TaskBenchProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: 'bench',
     });
@@ -27,7 +28,7 @@ export function TaskBench({ tasks, onFocus }: TaskBenchProps) {
                     <p className="text-sm text-gray-500 text-center py-8">No unplanned tasks</p>
                 ) : (
                     tasks.map(task => (
-                        <TaskCard key={task.id} task={task} onFocus={onFocus} />
+                        <TaskCard key={task.id} task={task} onFocus={onFocus} onEdit={onEdit} />
                     ))
                 )}
             </div>

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Play, Pause, Square, Timer } from 'lucide-react';
+import { Play, Pause, Square, Timer, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types';
 
 interface FocusTimerProps {
     activeTask?: Task | null;
+    onClose: () => void;
 }
 
-export function FocusTimer({ activeTask }: FocusTimerProps) {
+export function FocusTimer({ activeTask, onClose }: FocusTimerProps) {
     const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
     const [isActive, setIsActive] = useState(false);
 
@@ -42,7 +43,7 @@ export function FocusTimer({ activeTask }: FocusTimerProps) {
 
     return (
         <div className="fixed bottom-6 right-6 bg-white rounded-xl shadow-lg border p-4 w-80 z-50">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 relative">
                 <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
                     <Timer className="w-5 h-5" />
                 </div>
@@ -50,6 +51,12 @@ export function FocusTimer({ activeTask }: FocusTimerProps) {
                     <h3 className="font-semibold text-gray-800 text-sm">Focus Mode</h3>
                     <p className="text-xs text-gray-500 line-clamp-1">{activeTask.title}</p>
                 </div>
+                <button
+                    onClick={onClose}
+                    className="absolute -top-2 -right-2 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
+                >
+                    <X className="w-4 h-4" />
+                </button>
             </div>
 
             <div className="text-4xl font-bold text-center font-mono text-gray-800 mb-6">
