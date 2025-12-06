@@ -45,8 +45,8 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
             )}>
                 {format(date, 'd')}
             </div>
-            <div className="flex-1 space-y-1 overflow-y-auto max-h-[120px]">
-                {tasks.map(task => (
+            <div className="flex-1 space-y-1 overflow-hidden">
+                {tasks.slice(0, 3).map(task => (
                     <TaskCard
                         key={task.id}
                         task={task}
@@ -58,6 +58,11 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
                         isCompact
                     />
                 ))}
+                {tasks.length > 3 && (
+                    <div className="text-[10px] text-gray-500 font-medium pl-1">
+                        + {tasks.length - 3} more
+                    </div>
+                )}
             </div>
         </div>
     );
