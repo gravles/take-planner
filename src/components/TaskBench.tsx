@@ -74,7 +74,7 @@ export function TaskBench({ tasks, categories, onFocus, onEdit, onToggleComplete
     const uncategorizedTasks = tasks.filter(t => !t.category_id);
 
     return (
-        <div className="w-80 bg-white border-r flex flex-col h-screen shadow-xl z-20">
+        <div className="w-80 md:w-80 bg-white border-r flex flex-col h-full shadow-xl z-20">
             <div className="p-4 border-b bg-gray-50">
                 <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                     Task Bench

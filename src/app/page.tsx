@@ -6,8 +6,8 @@ import { useTasks } from '@/hooks/useTasks';
 import { useCategories } from '@/hooks/useCategories';
 import { TaskListView } from '@/components/TaskListView';
 import { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar } from 'lucide-react';
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X } from 'lucide-react';
+import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
 import { TaskCard } from '@/components/TaskCard';
 import { Task } from '@/types';
 import { FocusTimer } from '@/components/FocusTimer';
@@ -27,6 +27,7 @@ export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'list'>('day');
+  const [isBenchOpen, setIsBenchOpen] = useState(false);
 
   const handleToggleComplete = async (task: Task) => {
     const newStatus = task.status === 'completed' ? 'todo' : 'completed';
@@ -179,27 +180,63 @@ export default function Home() {
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <main className="flex h-screen overflow-hidden bg-white">
-        {viewMode !== 'list' && (
-          <TaskBench
-            tasks={benchTasks}
-            categories={categories}
-            onFocus={setFocusTask}
-            onEdit={handleEditTask}
-            onToggleComplete={handleToggleComplete}
-            onDelete={handleDeleteTask}
-            onUnschedule={handleUnscheduleTask}
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      collisionDetection={closestCorners}
+    >
+      <main className="flex flex-col md:flex-row h-screen overflow-hidden bg-white relative">
+        {/* Mobile Header Overlay for Bench */}
+        {isBenchOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setIsBenchOpen(false)}
           />
         )}
 
-        <div className="flex-1 flex flex-col h-screen relative">
-          <header className="h-16 border-b flex items-center justify-between px-6 bg-white shrink-0">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-bold text-gray-800">My Planner</h1>
+        {/* Task Bench - Sidebar on Desktop, Drawer on Mobile */}
+        {viewMode !== 'list' && (
+          <div className={`
+            fixed md:relative z-40 h-full transition-transform duration-300 ease-in-out
+            ${isBenchOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}>
+            <TaskBench
+              tasks={benchTasks}
+              categories={categories}
+              onFocus={setFocusTask}
+              onEdit={handleEditTask}
+              onToggleComplete={handleToggleComplete}
+              onDelete={handleDeleteTask}
+              onUnschedule={handleUnscheduleTask}
+            />
+            {/* Close button for mobile bench */}
+            <button
+              onClick={() => setIsBenchOpen(false)}
+              className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-md md:hidden"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 flex flex-col h-screen relative w-full">
+          <header className="h-16 border-b flex items-center justify-between px-4 md:px-6 bg-white shrink-0 gap-2">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Mobile Bench Toggle */}
+              {viewMode !== 'list' && (
+                <button
+                  onClick={() => setIsBenchOpen(true)}
+                  className="p-2 -ml-2 hover:bg-gray-100 rounded-lg md:hidden"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              )}
+
+              <h1 className="text-lg md:text-xl font-bold text-gray-800 truncate hidden sm:block">My Planner</h1>
 
               {viewMode !== 'list' && (
-                <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center gap-1 md:gap-2 bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
                     className="p-1 hover:bg-white rounded-md transition-colors"
@@ -218,26 +255,26 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 ml-4">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar">
                 <button
                   onClick={() => setViewMode('day')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
                 >
                   Day
                 </button>
                 <button
                   onClick={() => setViewMode('week')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
                 >
                   Week
                 </button>
                 <button
                   onClick={() => setViewMode('month')}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'month' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'month' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
                 >
                   Month
                 </button>
-                <div className="w-px h-4 bg-gray-300 mx-1" />
+                <div className="w-px h-4 bg-gray-300 mx-1 hidden sm:block" />
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
@@ -249,10 +286,11 @@ export default function Home() {
             </div>
             <button
               onClick={handleCreateTask}
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
-              New Task
+              <span className="hidden sm:inline">New Task</span>
+              <span className="sm:hidden">New</span>
             </button>
           </header>
 
