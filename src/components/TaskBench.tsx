@@ -8,9 +8,10 @@ interface TaskBenchProps {
     onFocus: (task: Task) => void;
     onEdit: (task: Task) => void;
     onToggleComplete: (task: Task) => void;
+    onDelete: (task: Task) => void;
 }
 
-export function TaskBench({ tasks, onFocus, onEdit, onToggleComplete }: TaskBenchProps) {
+export function TaskBench({ tasks, onFocus, onEdit, onToggleComplete, onDelete }: TaskBenchProps) {
     const { setNodeRef, isOver } = useDroppable({
         id: 'bench',
     });
@@ -35,6 +36,7 @@ export function TaskBench({ tasks, onFocus, onEdit, onToggleComplete }: TaskBenc
                             onFocus={onFocus}
                             onEdit={onEdit}
                             onToggleComplete={onToggleComplete}
+                            onDelete={onDelete}
                         />
                     ))
                 )}
