@@ -49,6 +49,7 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
                         onUnschedule={onUnschedule}
                         onDelete={onDelete}
                         isCompact
+                        showTime
                     />
                 ))}
             </div>
