@@ -41,8 +41,8 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
 }
 
 export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
-    // Generate time slots from 8 AM to 8 PM
-    const hours = Array.from({ length: 13 }, (_, i) => i + 8);
+    // Generate time slots from 7 AM to 11 PM
+    const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
     return (
         <div className="flex-1 h-screen overflow-y-auto bg-white p-6">

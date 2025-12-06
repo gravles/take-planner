@@ -29,7 +29,7 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
     });
 
     const isToday = isSameDay(date, new Date());
-    const hours = Array.from({ length: 13 }, (_, i) => i + 8); // 8 AM to 8 PM
+    const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 7 AM to 11 PM
 
     return (
         <div ref={setNodeRef} className="flex-1 min-w-[120px] border-r last:border-r-0 relative bg-white">
@@ -43,11 +43,11 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
                 if (!task.scheduled_at) return null;
                 const taskDate = new Date(task.scheduled_at);
                 const hour = taskDate.getHours();
-                if (hour < 8 || hour > 20) return null; // Out of view
+                if (hour < 7 || hour > 23) return null; // Out of view
 
                 const minutes = taskDate.getMinutes();
-                // Calculate position: (hour - 8) * 60px + minutes
-                const top = (hour - 8) * 60 + minutes;
+                // Calculate position: (hour - 7) * 60px + minutes
+                const top = (hour - 7) * 60 + minutes;
                 // Height: 1 min = 1px (compact)
                 const height = Math.max(24, task.duration_minutes);
 
@@ -80,7 +80,7 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
 export function WeekView({ currentDate, tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-    const hours = Array.from({ length: 13 }, (_, i) => i + 8);
+    const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
     return (
         <div className="flex h-full overflow-hidden flex-col">

@@ -132,6 +132,15 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                                 Done at {completedTime}
                             </span>
                         )}
+                        {/* Category Badge */}
+                        {task.category && !isCompleted && (
+                            <span
+                                className="text-[10px] px-1.5 py-0.5 rounded-full font-medium mt-1 self-start"
+                                style={{ backgroundColor: `${task.category.color}20`, color: task.category.color }}
+                            >
+                                {task.category.name}
+                            </span>
+                        )}
                     </div>
                 </div>
                 {task.priority === 'high' && !isCompleted && <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 ml-1" />}
