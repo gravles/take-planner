@@ -14,7 +14,7 @@ import { CreateTaskModal } from '@/components/CreateTaskModal';
 import { NotificationManager } from '@/components/NotificationManager';
 
 export default function Home() {
-  const { tasks, loading, addTask, updateTask } = useTasks();
+  const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -47,6 +47,16 @@ export default function Home() {
       taskDate.getFullYear() === currentDate.getFullYear()
     );
   });
+
+  const handleUnscheduleTask = async (task: Task) => {
+    await updateTask(task.id, { scheduled_at: null });
+  };
+
+  const handleDeleteTask = async (task: Task) => {
+    if (confirm('Are you sure you want to delete this task?')) {
+      await deleteTask(task.id);
+    }
+  };
 
   const handleCreateTask = () => {
     setEditingTask(null);
@@ -206,6 +216,8 @@ export default function Home() {
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
+              onUnschedule={handleUnscheduleTask}
+              onDelete={handleDeleteTask}
             />
           ) : (
             <TaskListView
@@ -213,6 +225,7 @@ export default function Home() {
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
+              onDelete={handleDeleteTask}
             />
           )}
         </div>
