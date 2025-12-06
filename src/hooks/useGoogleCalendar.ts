@@ -7,6 +7,7 @@ export interface GoogleEvent {
     start: { dateTime?: string; date?: string };
     end: { dateTime?: string; date?: string };
     htmlLink: string;
+    location?: string;
 }
 
 export function useGoogleCalendar() {
