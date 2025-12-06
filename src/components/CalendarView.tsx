@@ -9,6 +9,7 @@ interface CalendarViewProps {
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
+    onDelete?: (task: Task) => void;
 }
 
 function CalendarSlot({ hour, children }: { hour: number; children?: React.ReactNode }) {
@@ -39,7 +40,7 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     );
 }
 
-export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnschedule }: CalendarViewProps) {
+export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
     // Generate time slots from 8 AM to 8 PM
     const hours = Array.from({ length: 13 }, (_, i) => i + 8);
 
@@ -91,6 +92,7 @@ export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnsch
                                             isCompact={isCompact}
                                             onToggleComplete={onToggleComplete}
                                             onUnschedule={onUnschedule}
+                                            onDelete={onDelete}
                                         />
                                     </div>
                                 );

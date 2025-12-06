@@ -7,9 +7,10 @@ interface TaskListViewProps {
     onFocus: (task: Task) => void;
     onEdit: (task: Task) => void;
     onToggleComplete: (task: Task) => void;
+    onDelete: (task: Task) => void;
 }
 
-export function TaskListView({ tasks, onFocus, onEdit, onToggleComplete }: TaskListViewProps) {
+export function TaskListView({ tasks, onFocus, onEdit, onToggleComplete, onDelete }: TaskListViewProps) {
     const unscheduledTasks = tasks.filter(t => !t.scheduled_at && t.status !== 'completed');
     const scheduledTasks = tasks.filter(t => t.scheduled_at && t.status !== 'completed');
     const completedTasks = tasks.filter(t => t.status === 'completed');
@@ -33,6 +34,7 @@ export function TaskListView({ tasks, onFocus, onEdit, onToggleComplete }: TaskL
                                 onFocus={onFocus}
                                 onEdit={onEdit}
                                 onToggleComplete={onToggleComplete}
+                                onDelete={onDelete}
                             />
                         </div>
                     ))
