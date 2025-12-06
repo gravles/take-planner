@@ -83,13 +83,13 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
 
                 {/* Time (if requested) */}
                 {showTime && formattedTime && !isCompleted && (
-                    <span className="text-gray-500 font-medium shrink-0">{formattedTime}</span>
+                    <span className="text-gray-600 font-medium shrink-0">{formattedTime}</span>
                 )}
 
                 {/* Title */}
                 <span className={cn(
-                    "truncate font-medium flex-1",
-                    isCompleted && "line-through text-gray-400"
+                    "truncate font-medium flex-1 text-gray-900",
+                    isCompleted && "line-through text-gray-500"
                 )}>
                     {task.title}
                 </span>
@@ -128,19 +128,19 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                             onClick={() => onToggleComplete(task)}
                             className={cn(
                                 "mt-0.5 p-0.5 rounded-full transition-colors shrink-0",
-                                isCompleted ? "text-green-500 hover:text-green-600" : "text-gray-300 hover:text-green-500"
+                                isCompleted ? "text-green-500 hover:text-green-600" : "text-gray-400 hover:text-green-500"
                             )}
                         >
                             <CheckCircle className="w-4 h-4" />
                         </button>
                     )}
                     <div className="flex flex-col">
-                        <h3 className={cn("font-medium text-sm leading-tight", isCompleted && "line-through text-gray-400")}>
+                        <h3 className={cn("font-medium text-sm leading-tight text-gray-900", isCompleted && "line-through text-gray-500")}>
                             {task.title}
                         </h3>
                         {/* Completion Timestamp */}
                         {isCompleted && completedTime && (
-                            <span className="text-[10px] text-green-600 font-medium mt-0.5">
+                            <span className="text-[10px] text-green-700 font-medium mt-0.5">
                                 Done at {completedTime}
                             </span>
                         )}
@@ -160,14 +160,14 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
 
             {/* Scheduled Time Display */}
             {task.scheduled_at && !isCompleted && (
-                <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-2 font-medium">
+                <div className="flex items-center gap-1 text-[10px] text-gray-600 mb-2 font-medium">
                     <CalendarIcon className="w-3 h-3" />
                     <span>{format(new Date(task.scheduled_at), 'MMM d • h:mm a')}</span>
                 </div>
             )}
 
             <div className="mt-auto flex items-center justify-between">
-                <div className="flex items-center text-xs text-gray-500 gap-2">
+                <div className="flex items-center text-xs text-gray-600 gap-2">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>{task.duration_minutes}m</span>
