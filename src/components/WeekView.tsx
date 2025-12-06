@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task, Category } from '@/types';
 import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
@@ -8,6 +8,7 @@ import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 interface WeekViewProps {
     currentDate: Date;
     tasks: Task[];
+    categories?: Category[];
     events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
@@ -16,9 +17,10 @@ interface WeekViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function WeekColumn({ date, tasks, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
     date: Date;
     tasks: Task[];
+    categories?: Category[];
     events: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
@@ -93,6 +95,7 @@ function WeekColumn({ date, tasks, events, onFocus, onEdit, onToggleComplete, on
                     >
                         <TaskCard
                             task={task}
+                            categories={categories}
                             onFocus={onFocus}
                             onEdit={onEdit}
                             onToggleComplete={onToggleComplete}
@@ -108,7 +111,7 @@ function WeekColumn({ date, tasks, events, onFocus, onEdit, onToggleComplete, on
     );
 }
 
-export function WeekView({ currentDate, tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
+export function WeekView({ currentDate, tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
@@ -158,6 +161,7 @@ export function WeekView({ currentDate, tasks, events = [], onFocus, onEdit, onT
                                 key={date.toISOString()}
                                 date={date}
                                 tasks={dayTasks}
+                                categories={categories}
                                 events={dayEvents}
                                 onFocus={onFocus}
                                 onEdit={onEdit}

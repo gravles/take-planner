@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task, Category } from '@/types';
 import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle, Trash2, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 
 interface TaskCardProps {
     task: Task;
+    categories?: Category[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
@@ -15,7 +16,7 @@ interface TaskCardProps {
     showTime?: boolean;
 }
 
-export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, isCompact, showTime }: TaskCardProps) {
+export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, isCompact, showTime }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: task,
@@ -26,6 +27,8 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
     } : undefined;
 
     const isCompleted = task.status === 'completed';
+    // Resolve category from ID if possible, fallback to task.category
+    const category = categories.find(c => c.id === task.category_id) || task.category;
 
     // Priority Colors (Border based)
     const priorityColors = {

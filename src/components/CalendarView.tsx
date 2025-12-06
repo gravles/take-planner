@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task, Category } from '@/types';
 import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
@@ -6,6 +6,7 @@ import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 
 interface CalendarViewProps {
     tasks: Task[];
+    categories?: Category[];
     events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
@@ -42,7 +43,7 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     );
 }
 
-export function CalendarView({ tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
+export function CalendarView({ tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
     // Generate time slots from 7 AM to 11 PM
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
@@ -131,6 +132,7 @@ export function CalendarView({ tasks, events = [], onFocus, onEdit, onToggleComp
                                     >
                                         <TaskCard
                                             task={task}
+                                            categories={categories}
                                             onFocus={onFocus}
                                             onEdit={onEdit}
                                             isCompact={isCompact}

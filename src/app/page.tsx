@@ -345,10 +345,9 @@ export default function Home() {
             </div>
             <button
               onClick={handleCreateTask}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs md:text-sm font-medium whitespace-nowrap shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Task</span>
               <span className="hidden sm:inline">New Task</span>
               <span className="sm:hidden">New</span>
             </button>
@@ -365,6 +364,7 @@ export default function Home() {
           {viewMode === 'day' && (
             <CalendarView
               tasks={scheduledTasks}
+              categories={categories}
               events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
@@ -378,6 +378,7 @@ export default function Home() {
             <WeekView
               currentDate={currentDate}
               tasks={tasks} // Pass all tasks, filtering happens inside
+              categories={categories}
               events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
@@ -391,6 +392,7 @@ export default function Home() {
             <MonthView
               currentDate={currentDate}
               tasks={tasks} // Pass all tasks, filtering happens inside
+              categories={categories}
               events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}

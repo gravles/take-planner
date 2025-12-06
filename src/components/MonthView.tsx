@@ -1,4 +1,4 @@
-import { Task } from '@/types';
+import { Task, Category } from '@/types';
 import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
@@ -8,6 +8,7 @@ import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 interface MonthViewProps {
     currentDate: Date;
     tasks: Task[];
+    categories?: Category[];
     events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
@@ -16,9 +17,10 @@ interface MonthViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function MonthDay({ date, tasks, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
     date: Date;
     tasks: Task[];
+    categories?: Category[];
     events: GoogleEvent[];
     isCurrentMonth: boolean;
     onFocus?: (task: Task) => void;
@@ -63,6 +65,7 @@ function MonthDay({ date, tasks, events, isCurrentMonth, onFocus, onEdit, onTogg
                     <div key={task.id} className="min-h-0 shrink-0">
                         <TaskCard
                             task={task}
+                            categories={categories}
                             onFocus={onFocus}
                             onEdit={onEdit}
                             onToggleComplete={onToggleComplete}
@@ -77,7 +80,7 @@ function MonthDay({ date, tasks, events, isCurrentMonth, onFocus, onEdit, onTogg
     );
 }
 
-export function MonthView({ currentDate, tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: MonthViewProps) {
+export function MonthView({ currentDate, tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: MonthViewProps) {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const calendarStart = startOfWeek(monthStart);
@@ -110,6 +113,7 @@ export function MonthView({ currentDate, tasks, events = [], onFocus, onEdit, on
                             key={date.toISOString()}
                             date={date}
                             tasks={dayTasks}
+                            categories={categories}
                             events={dayEvents}
                             isCurrentMonth={isSameMonth(date, currentDate)}
                             onFocus={onFocus}
