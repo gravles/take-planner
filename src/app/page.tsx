@@ -34,6 +34,7 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'list'>('day');
   const [isBenchOpen, setIsBenchOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -353,31 +354,46 @@ export default function Home() {
               <span className="sm:hidden">New</span>
             </button>
 
-            <div className="relative ml-2 group">
-              <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
+            <div className="relative ml-2">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors"
+              >
                 <Settings className="w-5 h-5" />
               </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
-                <div className="px-4 py-2 border-b border-gray-50">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {session.user.email}
-                  </p>
+
+              {/* Backdrop to close menu */}
+              {isUserMenuOpen && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsUserMenuOpen(false)}
+                />
+              )}
+
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-4 py-2 border-b border-gray-50">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {session.user.email}
+                    </p>
+                  </div>
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={() => setIsUserMenuOpen(false)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Settings
+                  </Link>
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
                 </div>
-                <Link
-                  href="/settings"
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </Link>
-                <button
-                  onClick={() => supabase.auth.signOut()}
-                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </div>
+              )}
             </div>
           </header>
 
