@@ -72,6 +72,15 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                             task.priority === 'medium' ? "bg-yellow-500" : "bg-blue-500"
                 )} />
 
+                {/* Category Indicator (Compact) */}
+                {task.category && !isCompleted && (
+                    <div
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: task.category.color }}
+                        title={task.category.name}
+                    />
+                )}
+
                 {/* Time (if requested) */}
                 {showTime && formattedTime && !isCompleted && (
                     <span className="text-gray-500 font-medium shrink-0">{formattedTime}</span>
