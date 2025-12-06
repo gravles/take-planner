@@ -45,18 +45,22 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
             )}>
                 {format(date, 'd')}
             </div>
-            <div className="flex-1 space-y-1 overflow-y-auto max-h-[120px] scrollbar-thin scrollbar-thumb-gray-200">
+            <div className="flex-1 flex flex-col gap-0.5 overflow-hidden min-h-0">
                 {tasks.map(task => (
-                    <TaskCard
-                        key={task.id}
-                        task={task}
-                        onFocus={onFocus}
-                        onEdit={onEdit}
-                        onToggleComplete={onToggleComplete}
-                        onUnschedule={onUnschedule}
-                        onDelete={onDelete}
-                        isCompact
-                    />
+                    <div key={task.id} className="min-h-0 shrink-0">
+                        <TaskCard
+                            task={task}
+                            onFocus={onFocus}
+                            onEdit={onEdit}
+                            onToggleComplete={onToggleComplete}
+                            onUnschedule={onUnschedule}
+                            onDelete={onDelete}
+                            isCompact
+                        // If we have many tasks, we could pass a 'micro' prop here
+                        // For now, let's rely on the flex container to shrink them if needed
+                        // But TaskCard needs to handle being squashed
+                        />
+                    </div>
                 ))}
             </div>
         </div>

@@ -3,6 +3,7 @@
 import { TaskBench } from '@/components/TaskBench';
 import { CalendarView } from '@/components/CalendarView';
 import { useTasks } from '@/hooks/useTasks';
+import { useCategories } from '@/hooks/useCategories';
 import { TaskListView } from '@/components/TaskListView';
 import { useState } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar } from 'lucide-react';
@@ -19,6 +20,7 @@ import { MonthView } from '@/components/MonthView';
 
 export default function Home() {
   const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
+  const { categories } = useCategories();
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -111,6 +113,23 @@ export default function Home() {
     if (!task) return;
 
     // Dropped on Bench
+    if (over.id === 'bench-uncategorized') {
+      await updateTask(taskId, {
+        scheduled_at: null,
+        category_id: null
+      });
+      return;
+    }
+
+    if (typeof over.id === 'string' && over.id.startsWith('bench-category-')) {
+      const categoryId = over.id.replace('bench-category-', '');
+      await updateTask(taskId, {
+        scheduled_at: null,
+        category_id: categoryId
+      });
+      return;
+    }
+
     if (over.id === 'bench') {
       if (task.scheduled_at) {
         await updateTask(taskId, { scheduled_at: null });
@@ -165,10 +184,12 @@ export default function Home() {
         {viewMode !== 'list' && (
           <TaskBench
             tasks={benchTasks}
+            categories={categories}
             onFocus={setFocusTask}
             onEdit={handleEditTask}
             onToggleComplete={handleToggleComplete}
             onDelete={handleDeleteTask}
+            onUnschedule={handleUnscheduleTask}
           />
         )}
 
@@ -273,10 +294,12 @@ export default function Home() {
           {viewMode === 'list' && (
             <TaskListView
               tasks={tasks}
+              categories={categories}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTask}
+              onUnschedule={handleUnscheduleTask}
             />
           )}
         </div>

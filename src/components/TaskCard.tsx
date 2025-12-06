@@ -59,7 +59,10 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                 style={style}
                 {...listeners}
                 {...attributes}
-                className={cardClasses}
+                className={cn(
+                    cardClasses,
+                    "min-h-[20px]" // Allow it to be small
+                )}
             >
                 {/* Status Indicator */}
                 <div className={cn(
