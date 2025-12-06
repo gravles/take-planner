@@ -3,10 +3,12 @@ import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isSameMonth } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 
 interface MonthViewProps {
     currentDate: Date;
     tasks: Task[];
+    events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
@@ -14,9 +16,10 @@ interface MonthViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function MonthDay({ date, tasks, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
     date: Date;
     tasks: Task[];
+    events: GoogleEvent[];
     isCurrentMonth: boolean;
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
@@ -46,6 +49,16 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
                 {format(date, 'd')}
             </div>
             <div className="flex-1 flex flex-col gap-0.5 overflow-hidden min-h-0">
+                {/* Events */}
+                {events.map(event => (
+                    <div key={event.id} className="min-h-0 shrink-0">
+                        <div className="bg-blue-100 border-l-2 border-blue-500 rounded px-1 py-0.5 text-[10px] truncate text-blue-800 font-medium">
+                            {event.summary}
+                        </div>
+                    </div>
+                ))}
+
+                {/* Tasks */}
                 {tasks.map(task => (
                     <div key={task.id} className="min-h-0 shrink-0">
                         <TaskCard
@@ -56,9 +69,6 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
                             onUnschedule={onUnschedule}
                             onDelete={onDelete}
                             isCompact
-                        // If we have many tasks, we could pass a 'micro' prop here
-                        // For now, let's rely on the flex container to shrink them if needed
-                        // But TaskCard needs to handle being squashed
                         />
                     </div>
                 ))}
@@ -67,7 +77,7 @@ function MonthDay({ date, tasks, isCurrentMonth, onFocus, onEdit, onToggleComple
     );
 }
 
-export function MonthView({ currentDate, tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: MonthViewProps) {
+export function MonthView({ currentDate, tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: MonthViewProps) {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const calendarStart = startOfWeek(monthStart);
@@ -90,11 +100,17 @@ export function MonthView({ currentDate, tasks, onFocus, onEdit, onToggleComplet
                         t.scheduled_at && isSameDay(new Date(t.scheduled_at), date)
                     );
 
+                    const dayEvents = events.filter(e => {
+                        const eventStart = new Date(e.start.dateTime || e.start.date!);
+                        return isSameDay(eventStart, date);
+                    });
+
                     return (
                         <MonthDay
                             key={date.toISOString()}
                             date={date}
                             tasks={dayTasks}
+                            events={dayEvents}
                             isCurrentMonth={isSameMonth(date, currentDate)}
                             onFocus={onFocus}
                             onEdit={onEdit}

@@ -3,10 +3,12 @@ import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 
 interface WeekViewProps {
     currentDate: Date;
     tasks: Task[];
+    events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
@@ -14,9 +16,10 @@ interface WeekViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function WeekColumn({ date, tasks, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
     date: Date;
     tasks: Task[];
+    events: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
@@ -37,6 +40,34 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
             {hours.map(hour => (
                 <div key={hour} className="h-[60px] border-b border-gray-50 box-border w-full" />
             ))}
+
+            {/* Google Events */}
+            {events.map(event => {
+                const eventStart = new Date(event.start.dateTime || event.start.date!);
+                const eventEnd = new Date(event.end.dateTime || event.end.date!);
+                const hour = eventStart.getHours();
+                if (hour < 7 || hour > 23) return null;
+
+                const minutes = eventStart.getMinutes();
+                const top = (hour - 7) * 60 + minutes;
+                const durationMinutes = (eventEnd.getTime() - eventStart.getTime()) / (1000 * 60);
+                const height = Math.max(24, durationMinutes);
+
+                return (
+                    <div
+                        key={event.id}
+                        className="absolute left-0.5 right-0.5 z-0 px-1"
+                        style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                        }}
+                    >
+                        <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 shadow-sm">
+                            <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
+                        </div>
+                    </div>
+                );
+            })}
 
             {/* Tasks */}
             {tasks.map(task => {
@@ -77,7 +108,7 @@ function WeekColumn({ date, tasks, onFocus, onEdit, onToggleComplete, onUnschedu
     );
 }
 
-export function WeekView({ currentDate, tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
+export function WeekView({ currentDate, tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
@@ -117,11 +148,17 @@ export function WeekView({ currentDate, tasks, onFocus, onEdit, onToggleComplete
                             t.scheduled_at && isSameDay(new Date(t.scheduled_at), date)
                         );
 
+                        const dayEvents = events.filter(e => {
+                            const eventStart = new Date(e.start.dateTime || e.start.date!);
+                            return isSameDay(eventStart, date);
+                        });
+
                         return (
                             <WeekColumn
                                 key={date.toISOString()}
                                 date={date}
                                 tasks={dayTasks}
+                                events={dayEvents}
                                 onFocus={onFocus}
                                 onEdit={onEdit}
                                 onToggleComplete={onToggleComplete}

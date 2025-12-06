@@ -378,6 +378,7 @@ export default function Home() {
             <WeekView
               currentDate={currentDate}
               tasks={tasks} // Pass all tasks, filtering happens inside
+              events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
@@ -390,6 +391,7 @@ export default function Home() {
             <MonthView
               currentDate={currentDate}
               tasks={tasks} // Pass all tasks, filtering happens inside
+              events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
