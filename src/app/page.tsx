@@ -7,8 +7,9 @@ import { useCategories } from '@/hooks/useCategories';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
+import Link from 'next/link';
 import { Auth } from '@/components/Auth';
 import { supabase } from '@/lib/supabase';
 import { TaskCard } from '@/components/TaskCard';
@@ -352,13 +353,32 @@ export default function Home() {
               <span className="sm:hidden">New</span>
             </button>
 
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors ml-2"
-              title="Sign Out"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            <div className="relative ml-2 group">
+              <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
+                <div className="px-4 py-2 border-b border-gray-50">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {session.user.email}
+                  </p>
+                </div>
+                <Link
+                  href="/settings"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </Link>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            </div>
           </header>
 
           {viewMode === 'day' && (
