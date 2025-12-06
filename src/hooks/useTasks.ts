@@ -7,18 +7,7 @@ export function useTasks() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const initAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                // Try to sign in anonymously
-                const { error } = await supabase.auth.signInAnonymously();
-                if (error) {
-                    console.error('Error signing in anonymously:', error);
-                }
-            }
-            fetchTasks();
-        };
-        initAuth();
+        fetchTasks();
     }, []);
 
     async function fetchTasks() {

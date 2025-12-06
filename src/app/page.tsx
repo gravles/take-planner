@@ -4,10 +4,13 @@ import { TaskBench } from '@/components/TaskBench';
 import { CalendarView } from '@/components/CalendarView';
 import { useTasks } from '@/hooks/useTasks';
 import { useCategories } from '@/hooks/useCategories';
+import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { TaskListView } from '@/components/TaskListView';
-import { useState } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
+import { Auth } from '@/components/Auth';
+import { supabase } from '@/lib/supabase';
 import { TaskCard } from '@/components/TaskCard';
 import { Task } from '@/types';
 import { FocusTimer } from '@/components/FocusTimer';
@@ -21,6 +24,8 @@ import { MonthView } from '@/components/MonthView';
 export default function Home() {
   const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
   const { categories } = useCategories();
+  const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
+
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -28,6 +33,52 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'list'>('day');
   const [isBenchOpen, setIsBenchOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch Google Events when date or view changes
+  useEffect(() => {
+    if (session?.user?.app_metadata?.provider === 'google') {
+      const start = new Date(currentDate);
+      const end = new Date(currentDate);
+
+      if (viewMode === 'day') {
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+      } else if (viewMode === 'week') {
+        const day = start.getDay();
+        const diff = start.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        start.setDate(diff);
+        start.setHours(0, 0, 0, 0);
+        end.setDate(start.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+      } else if (viewMode === 'month') {
+        start.setDate(1);
+        start.setHours(0, 0, 0, 0);
+        end.setMonth(end.getMonth() + 1);
+        end.setDate(0);
+        end.setHours(23, 59, 59, 999);
+      }
+
+      // Add some buffer to be safe
+      fetchGoogleEvents(start, end);
+    }
+  }, [currentDate, viewMode, session]);
 
   const handleToggleComplete = async (task: Task) => {
     const newStatus = task.status === 'completed' ? 'todo' : 'completed';
@@ -88,7 +139,11 @@ export default function Home() {
     if (editingTask) {
       success = await updateTask(editingTask.id, taskData) || false;
     } else {
-      success = await addTask(taskData as any) || false;
+      success = await addTask({
+        ...taskData as any,
+        user_id: session?.user?.id, // Use actual user ID
+        status: 'todo',
+      }) || false;
     }
 
     if (success) {
@@ -171,12 +226,16 @@ export default function Home() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-gray-900" />
       </div>
     );
+  }
+
+  if (!session) {
+    return <Auth />;
   }
 
   return (
@@ -290,13 +349,23 @@ export default function Home() {
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">New Task</span>
+              <span className="hidden sm:inline">New Task</span>
               <span className="sm:hidden">New</span>
+            </button>
+
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-red-600 transition-colors ml-2"
+              title="Sign Out"
+            >
+              <LogOut className="w-5 h-5" />
             </button>
           </header>
 
           {viewMode === 'day' && (
             <CalendarView
               tasks={scheduledTasks}
+              events={googleEvents}
               onFocus={setFocusTask}
               onEdit={handleEditTask}
               onToggleComplete={handleToggleComplete}
