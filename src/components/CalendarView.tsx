@@ -67,81 +67,92 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                         return date.getHours() === hour;
                     });
 
-                    // Combine for layout calculations (simple overlap handling)
-                    // For now, we'll render events first (background) then tasks
-                    // Or side-by-side? Let's do side-by-side if possible, but types differ.
-                    // Let's just render events with a fixed width or overlapping for now.
+                    // Combine items for layout
+                    const items = [
+                        ...slotTasks.map(t => ({ type: 'task' as const, data: t })),
+                        ...slotEvents.map(e => ({ type: 'event' as const, data: e }))
+                    ];
 
                     return (
                         <CalendarSlot key={hour} hour={hour}>
-                            {/* Render Google Events */}
-                            {slotEvents.map((event, index) => {
-                                const date = new Date(event.start.dateTime!);
-                                const endDate = event.end.dateTime ? new Date(event.end.dateTime) : new Date(date.getTime() + 60 * 60 * 1000);
-                                const durationMinutes = (endDate.getTime() - date.getTime()) / (1000 * 60);
+                            {items.map((item, index) => {
+                                const widthPercent = 100 / items.length;
+                                const leftPercent = index * widthPercent;
 
-                                const height = Math.max(20, durationMinutes * 2);
-                                const minutes = date.getMinutes();
-                                const top = minutes * 2;
+                                if (item.type === 'task') {
+                                    const task = item.data as Task;
+                                    const height = Math.max(20, task.duration_minutes * 2);
+                                    const date = new Date(task.scheduled_at!);
+                                    const minutes = date.getMinutes();
+                                    const top = minutes * 2;
+                                    const isCompact = task.duration_minutes < 30;
 
-                                return (
-                                    <div
-                                        key={event.id}
-                                        className="absolute z-0 px-1 transition-all duration-200"
-                                        style={{
-                                            height: `${height}px`,
-                                            top: `${top}px`,
-                                            width: `90%`, // Events take mostly full width but sit behind?
-                                            left: `0%`,
-                                            zIndex: 5
-                                        }}
-                                    >
-                                        <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm">
-                                            <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
-                                            <div className="text-blue-600">
-                                                {date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                    return (
+                                        <div
+                                            key={task.id}
+                                            className="absolute z-10 px-1 transition-all duration-200"
+                                            style={{
+                                                height: `${height}px`,
+                                                top: `${top}px`,
+                                                width: `${widthPercent}%`,
+                                                left: `${leftPercent}%`,
+                                                zIndex: 10
+                                            }}
+                                        >
+                                            <TaskCard
+                                                task={task}
+                                                categories={categories}
+                                                onFocus={onFocus}
+                                                onEdit={onEdit}
+                                                isCompact={isCompact}
+                                                onToggleComplete={onToggleComplete}
+                                                onUnschedule={onUnschedule}
+                                                onDelete={onDelete}
+                                            />
+                                        </div>
+                                    );
+                                } else {
+                                    const event = item.data as GoogleEvent;
+                                    const date = new Date(event.start.dateTime!);
+                                    const endDate = event.end.dateTime ? new Date(event.end.dateTime) : new Date(date.getTime() + 60 * 60 * 1000);
+                                    const durationMinutes = (endDate.getTime() - date.getTime()) / (1000 * 60);
+                                    const height = Math.max(20, durationMinutes * 2);
+                                    const minutes = date.getMinutes();
+                                    const top = minutes * 2;
+
+                                    return (
+                                        <div
+                                            key={event.id}
+                                            className="absolute z-10 px-1 transition-all duration-200"
+                                            style={{
+                                                height: `${height}px`,
+                                                top: `${top}px`,
+                                                width: `${widthPercent}%`,
+                                                left: `${leftPercent}%`,
+                                                zIndex: 5
+                                            }}
+                                        >
+                                            <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm flex flex-col">
+                                                <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
+                                                <div className="text-blue-600 text-[10px] truncate">
+                                                    {date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {endDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                                </div>
+                                                {event.location && (
+                                                    <a
+                                                        href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-500 text-[10px] truncate mt-auto flex items-center gap-1 hover:underline cursor-pointer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        <span>📍</span>
+                                                        {event.location}
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-
-                            {/* Render Tasks */}
-                            {slotTasks.map((task, index) => {
-                                const height = Math.max(20, task.duration_minutes * 2);
-                                const date = new Date(task.scheduled_at!);
-                                const minutes = date.getMinutes();
-                                const top = minutes * 2;
-
-                                // Side-by-side logic for TASKS
-                                const widthPercent = 100 / slotTasks.length;
-                                const leftPercent = index * widthPercent;
-                                const isCompact = task.duration_minutes < 30;
-
-                                return (
-                                    <div
-                                        key={task.id}
-                                        className="absolute z-10 px-1 transition-all duration-200"
-                                        style={{
-                                            height: `${height}px`,
-                                            top: `${top}px`,
-                                            width: `${widthPercent}%`,
-                                            left: `${leftPercent}%`,
-                                            zIndex: 10 // Tasks above events
-                                        }}
-                                    >
-                                        <TaskCard
-                                            task={task}
-                                            categories={categories}
-                                            onFocus={onFocus}
-                                            onEdit={onEdit}
-                                            isCompact={isCompact}
-                                            onToggleComplete={onToggleComplete}
-                                            onUnschedule={onUnschedule}
-                                            onDelete={onDelete}
-                                        />
-                                    </div>
-                                );
+                                    );
+                                }
                             })}
                         </CalendarSlot>
                     );

@@ -70,9 +70,15 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
                                 {eventStart.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {eventEnd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
                             </div>
                             {event.location && (
-                                <div className="text-blue-500 text-[10px] truncate mt-auto">
+                                <a
+                                    href={`https://maps.google.com/?q=${encodeURIComponent(event.location)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-500 text-[10px] truncate mt-auto hover:underline cursor-pointer block"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     📍 {event.location}
-                                </div>
+                                </a>
                             )}
                         </div>
                     </div>
