@@ -79,5 +79,22 @@ export function useTasks() {
         }
     }
 
-    return { tasks, loading, addTask, updateTask, refreshTasks: fetchTasks };
+    async function deleteTask(id: string) {
+        try {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            setTasks(tasks.filter(t => t.id !== id));
+            return true;
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            return false;
+        }
+    }
+
+    return { tasks, loading, addTask, updateTask, deleteTask, refreshTasks: fetchTasks };
 }
