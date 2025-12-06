@@ -11,6 +11,7 @@ export interface Task {
     status: TaskStatus;
     scheduled_at: string | null;
     user_id: string;
+    completed_at?: string | null;
 }
 
 export type NewTask = Omit<Task, 'id' | 'created_at' | 'user_id'>;
