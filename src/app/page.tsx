@@ -12,6 +12,10 @@ import { Task } from '@/types';
 import { FocusTimer } from '@/components/FocusTimer';
 import { CreateTaskModal } from '@/components/CreateTaskModal';
 import { NotificationManager } from '@/components/NotificationManager';
+import { DatePicker } from '@/components/DatePicker';
+
+import { WeekView } from '@/components/WeekView';
+import { MonthView } from '@/components/MonthView';
 
 export default function Home() {
   const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
@@ -20,11 +24,19 @@ export default function Home() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month' | 'list'>('day');
 
   const handleToggleComplete = async (task: Task) => {
     const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-    await updateTask(task.id, { status: newStatus });
+    const updates: Partial<Task> = { status: newStatus };
+
+    if (newStatus === 'completed') {
+      updates.completed_at = new Date().toISOString();
+    } else {
+      updates.completed_at = null;
+    }
+
+    await updateTask(task.id, updates);
   };
 
   const sensors = useSensors(
@@ -150,12 +162,13 @@ export default function Home() {
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <main className="flex h-screen overflow-hidden bg-white">
-        {viewMode === 'calendar' && (
+        {viewMode !== 'list' && (
           <TaskBench
             tasks={benchTasks}
             onFocus={setFocusTask}
             onEdit={handleEditTask}
             onToggleComplete={handleToggleComplete}
+            onDelete={handleDeleteTask}
           />
         )}
 
@@ -164,7 +177,7 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-bold text-gray-800">My Planner</h1>
 
-              {viewMode === 'calendar' && (
+              {viewMode !== 'list' && (
                 <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
@@ -172,9 +185,9 @@ export default function Home() {
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-sm font-medium w-32 text-center">
-                    {currentDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                  </span>
+
+                  <DatePicker currentDate={currentDate} onDateChange={setCurrentDate} />
+
                   <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
                     className="p-1 hover:bg-white rounded-md transition-colors"
@@ -186,12 +199,24 @@ export default function Home() {
 
               <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 ml-4">
                 <button
-                  onClick={() => setViewMode('calendar')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'calendar' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
-                  title="Calendar View"
+                  onClick={() => setViewMode('day')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
                 >
-                  <Calendar className="w-4 h-4" />
+                  Day
                 </button>
+                <button
+                  onClick={() => setViewMode('week')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                >
+                  Week
+                </button>
+                <button
+                  onClick={() => setViewMode('month')}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === 'month' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                >
+                  Month
+                </button>
+                <div className="w-px h-4 bg-gray-300 mx-1" />
                 <button
                   onClick={() => setViewMode('list')}
                   className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
@@ -210,7 +235,7 @@ export default function Home() {
             </button>
           </header>
 
-          {viewMode === 'calendar' ? (
+          {viewMode === 'day' && (
             <CalendarView
               tasks={scheduledTasks}
               onFocus={setFocusTask}
@@ -219,7 +244,33 @@ export default function Home() {
               onUnschedule={handleUnscheduleTask}
               onDelete={handleDeleteTask}
             />
-          ) : (
+          )}
+
+          {viewMode === 'week' && (
+            <WeekView
+              currentDate={currentDate}
+              tasks={tasks} // Pass all tasks, filtering happens inside
+              onFocus={setFocusTask}
+              onEdit={handleEditTask}
+              onToggleComplete={handleToggleComplete}
+              onUnschedule={handleUnscheduleTask}
+              onDelete={handleDeleteTask}
+            />
+          )}
+
+          {viewMode === 'month' && (
+            <MonthView
+              currentDate={currentDate}
+              tasks={tasks} // Pass all tasks, filtering happens inside
+              onFocus={setFocusTask}
+              onEdit={handleEditTask}
+              onToggleComplete={handleToggleComplete}
+              onUnschedule={handleUnscheduleTask}
+              onDelete={handleDeleteTask}
+            />
+          )}
+
+          {viewMode === 'list' && (
             <TaskListView
               tasks={tasks}
               onFocus={setFocusTask}

@@ -13,7 +13,14 @@ interface TaskListViewProps {
 export function TaskListView({ tasks, onFocus, onEdit, onToggleComplete, onDelete }: TaskListViewProps) {
     const unscheduledTasks = tasks.filter(t => !t.scheduled_at && t.status !== 'completed');
     const scheduledTasks = tasks.filter(t => t.scheduled_at && t.status !== 'completed');
-    const completedTasks = tasks.filter(t => t.status === 'completed');
+    const completedTasks = tasks
+        .filter(t => t.status === 'completed')
+        .sort((a, b) => {
+            if (!a.completed_at && !b.completed_at) return 0;
+            if (!a.completed_at) return 1;
+            if (!b.completed_at) return -1;
+            return new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime();
+        });
 
     const TaskGroup = ({ title, groupTasks, className }: { title: string, groupTasks: Task[], className?: string }) => (
         <div className={cn("mb-8", className)}>
