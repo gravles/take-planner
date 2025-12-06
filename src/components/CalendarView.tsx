@@ -2,9 +2,11 @@ import { Task } from '@/types';
 import { TaskCard } from './TaskCard';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
+import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 
 interface CalendarViewProps {
     tasks: Task[];
+    events?: GoogleEvent[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
@@ -40,7 +42,7 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     );
 }
 
-export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
+export function CalendarView({ tasks, events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
     // Generate time slots from 7 AM to 11 PM
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
@@ -57,21 +59,62 @@ export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnsch
                         return date.getHours() === hour;
                     });
 
+                    // Find events for this hour
+                    const slotEvents = events.filter(e => {
+                        if (!e.start.dateTime) return false;
+                        const date = new Date(e.start.dateTime);
+                        return date.getHours() === hour;
+                    });
+
+                    // Combine for layout calculations (simple overlap handling)
+                    // For now, we'll render events first (background) then tasks
+                    // Or side-by-side? Let's do side-by-side if possible, but types differ.
+                    // Let's just render events with a fixed width or overlapping for now.
+
                     return (
                         <CalendarSlot key={hour} hour={hour}>
+                            {/* Render Google Events */}
+                            {slotEvents.map((event, index) => {
+                                const date = new Date(event.start.dateTime!);
+                                const endDate = event.end.dateTime ? new Date(event.end.dateTime) : new Date(date.getTime() + 60 * 60 * 1000);
+                                const durationMinutes = (endDate.getTime() - date.getTime()) / (1000 * 60);
+
+                                const height = Math.max(20, durationMinutes * 2);
+                                const minutes = date.getMinutes();
+                                const top = minutes * 2;
+
+                                return (
+                                    <div
+                                        key={event.id}
+                                        className="absolute z-0 px-1 transition-all duration-200"
+                                        style={{
+                                            height: `${height}px`,
+                                            top: `${top}px`,
+                                            width: `90%`, // Events take mostly full width but sit behind?
+                                            left: `0%`,
+                                            zIndex: 5
+                                        }}
+                                    >
+                                        <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm">
+                                            <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
+                                            <div className="text-blue-600">
+                                                {date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Render Tasks */}
                             {slotTasks.map((task, index) => {
-                                // Calculate height: 1 minute = 2px (120px / 60min)
-                                // Min height 20px for short tasks
                                 const height = Math.max(20, task.duration_minutes * 2);
                                 const date = new Date(task.scheduled_at!);
                                 const minutes = date.getMinutes();
                                 const top = minutes * 2;
 
-                                // Side-by-side logic
+                                // Side-by-side logic for TASKS
                                 const widthPercent = 100 / slotTasks.length;
                                 const leftPercent = index * widthPercent;
-
-                                // Use compact mode if task is less than 30 minutes
                                 const isCompact = task.duration_minutes < 30;
 
                                 return (
@@ -82,7 +125,8 @@ export function CalendarView({ tasks, onFocus, onEdit, onToggleComplete, onUnsch
                                             height: `${height}px`,
                                             top: `${top}px`,
                                             width: `${widthPercent}%`,
-                                            left: `${leftPercent}%`
+                                            left: `${leftPercent}%`,
+                                            zIndex: 10 // Tasks above events
                                         }}
                                     >
                                         <TaskCard
