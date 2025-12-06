@@ -1,7 +1,8 @@
 import { Task } from '@/types';
-import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle } from 'lucide-react';
+import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle, Trash2, Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
+import { format } from 'date-fns';
 
 interface TaskCardProps {
     task: Task;
@@ -9,10 +10,11 @@ interface TaskCardProps {
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
+    onDelete?: (task: Task) => void;
     isCompact?: boolean;
 }
 
-export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule, isCompact }: TaskCardProps) {
+export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, isCompact }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: task,
@@ -36,6 +38,10 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
         isDragging && 'opacity-50 z-50',
         isCompact ? 'px-2 py-0.5 h-full flex items-center justify-between' : 'p-3 h-full flex flex-col'
     );
+
+    const formattedDate = task.scheduled_at
+        ? format(new Date(task.scheduled_at), 'MMM d • h:mm a')
+        : null;
 
     if (isCompact) {
         return (
@@ -85,6 +91,15 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                                 <Pencil className="w-2.5 h-2.5" />
                             </button>
                         )}
+                        {onDelete && (
+                            <button
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => onDelete(task)}
+                                className="p-0.5 hover:text-red-600 transition-colors"
+                            >
+                                <Trash2 className="w-2.5 h-2.5" />
+                            </button>
+                        )}
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onFocus(task)}
@@ -127,6 +142,13 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                 {task.priority === 'high' && !isCompleted && <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 ml-1" />}
             </div>
 
+            {formattedDate && !isCompact && (
+                <div className="flex items-center gap-1 text-[10px] text-gray-500 mb-2 font-medium">
+                    <CalendarIcon className="w-3 h-3" />
+                    <span>{formattedDate}</span>
+                </div>
+            )}
+
             <div className="mt-auto flex items-center justify-between">
                 <div className="flex items-center text-xs text-gray-600 gap-2">
                     <div className="flex items-center gap-1">
@@ -154,6 +176,16 @@ export function TaskCard({ task, onFocus, onEdit, onToggleComplete, onUnschedule
                                 title="Edit Task"
                             >
                                 <Pencil className="w-3 h-3" />
+                            </button>
+                        )}
+                        {onDelete && (
+                            <button
+                                onPointerDown={(e) => e.stopPropagation()}
+                                onClick={() => onDelete(task)}
+                                className="p-1 hover:bg-red-50 rounded-full text-gray-600 hover:text-red-600 transition-colors"
+                                title="Delete Task"
+                            >
+                                <Trash2 className="w-3 h-3" />
                             </button>
                         )}
                         <button
