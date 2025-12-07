@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useIntegrationToken } from './useIntegrationToken';
 
 export interface GoogleEvent {
     id: string;
@@ -14,23 +14,14 @@ export function useGoogleCalendar() {
     const [events, setEvents] = useState<GoogleEvent[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { token, loading: tokenLoading } = useIntegrationToken('google');
 
     const fetchEvents = async (timeMin: Date, timeMax: Date) => {
+        if (!token) return;
+
         setLoading(true);
         setError(null);
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session || !session.provider_token) {
-                // If no provider token, we might not be logged in with Google or the token is missing
-                // For now, just return empty if no token
-                return;
-            }
-
-            // Check if the provider is google
-            if (session.user.app_metadata.provider !== 'google') {
-                return;
-            }
-
             const params = new URLSearchParams({
                 timeMin: timeMin.toISOString(),
                 timeMax: timeMax.toISOString(),
@@ -42,7 +33,7 @@ export function useGoogleCalendar() {
                 `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
                 {
                     headers: {
-                        Authorization: `Bearer ${session.provider_token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
@@ -61,5 +52,15 @@ export function useGoogleCalendar() {
         }
     };
 
-    return { events, loading, error, fetchEvents };
+    // Auto-fetch when token is available
+    useEffect(() => {
+        if (token) {
+            const now = new Date();
+            const end = new Date();
+            end.setDate(end.getDate() + 7); // Fetch next 7 days by default
+            fetchEvents(now, end);
+        }
+    }, [token]);
+
+    return { events, loading: loading || tokenLoading, error, fetchEvents };
 }

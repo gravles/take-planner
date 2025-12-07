@@ -5,6 +5,7 @@ import { CalendarView } from '@/components/CalendarView';
 import { useTasks } from '@/hooks/useTasks';
 import { useCategories } from '@/hooks/useCategories';
 import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
+import { useMicrosoftToDo } from '@/hooks/useMicrosoftToDo';
 import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings } from 'lucide-react';
@@ -23,9 +24,10 @@ import { WeekView } from '@/components/WeekView';
 import { MonthView } from '@/components/MonthView';
 
 export default function Home() {
-  const { tasks, loading, addTask, updateTask, deleteTask } = useTasks();
-  const { categories } = useCategories();
+  const { tasks, loading: tasksLoading, addTask, updateTask, deleteTask } = useTasks();
+  const { categories, loading: categoriesLoading } = useCategories();
   const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
+  const { tasks: msToDoTasks } = useMicrosoftToDo();
 
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
