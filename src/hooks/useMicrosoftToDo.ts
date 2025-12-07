@@ -184,6 +184,34 @@ export function useMicrosoftToDo() {
                 .from('tasks')
                 .upsert(finalUpsertData, { onConflict: 'user_id,external_id' });
         }
+
+        // 2. Handle Remote Completions (MS -> Supabase)
+        // If a task is in Supabase as 'todo' but NOT in the fetched msTasks (which are only active ones),
+        // it means it was completed (or deleted) in Microsoft To Do.
+        // We should mark it as completed in Supabase.
+
+        const activeExternalIds = new Set(msTasks.map(t => t.id));
+
+        const { data: localActiveTasks } = await supabase
+            .from('tasks')
+            .select('id, external_id')
+            .eq('user_id', session.user.id)
+            .eq('source', 'microsoft_todo')
+            .eq('status', 'todo');
+
+        if (localActiveTasks) {
+            const tasksToComplete = localActiveTasks
+                .filter(t => t.external_id && !activeExternalIds.has(t.external_id))
+                .map(t => t.id);
+
+            if (tasksToComplete.length > 0) {
+                console.log(`[Sync] Marking ${tasksToComplete.length} tasks as completed (synced from MS To Do)`);
+                await supabase
+                    .from('tasks')
+                    .update({ status: 'completed' })
+                    .in('id', tasksToComplete);
+            }
+        }
     };
 
     useEffect(() => {
