@@ -6,6 +6,8 @@ export interface Category {
     name: string;
     color: string;
     user_id: string;
+    source?: 'supabase' | 'microsoft_todo';
+    external_id?: string;
 }
 
 export interface Task {
