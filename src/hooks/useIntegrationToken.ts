@@ -16,22 +16,28 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
             if (!session) {
                 setToken(null);
+                setLoading(false);
                 return;
             }
 
             // Determine the active provider for the current session
-            let activeProvider = session.user.app_metadata.provider;
+            const appMetadataProvider = session.user.app_metadata.provider;
+            let calculatedProvider = appMetadataProvider;
 
             if (session.user.identities && session.user.identities.length > 0) {
                 // Sort identities by last_sign_in_at descending
                 const sortedIdentities = [...session.user.identities].sort((a, b) => {
                     return new Date(b.last_sign_in_at || 0).getTime() - new Date(a.last_sign_in_at || 0).getTime();
                 });
-                // The first one is likely the active one
                 if (sortedIdentities[0]) {
-                    activeProvider = sortedIdentities[0].provider;
+                    calculatedProvider = sortedIdentities[0].provider;
                 }
             }
+
+            console.log(`[useIntegrationToken] AppMetadata: ${appMetadataProvider}, Calculated: ${calculatedProvider}`);
+
+            // Trust app_metadata.provider as the primary source for the CURRENT session
+            const activeProvider = appMetadataProvider || calculatedProvider;
 
             console.log(`[useIntegrationToken] Requested: ${provider}, Active: ${activeProvider}`);
 
@@ -41,6 +47,7 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 setToken(session.provider_token);
                 // We should also save this to the DB for later
                 await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
+                setLoading(false);
                 return;
             }
 
@@ -91,7 +98,7 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                     refresh_token: refreshToken,
                     updated_at: new Date().toISOString(),
                     expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
-                }, { onConflict: 'user_id,provider' }); // Remove space in onConflict
+                }, { onConflict: 'user_id,provider' });
 
             if (error) console.error('Error saving token:', error);
         } catch (err) {
