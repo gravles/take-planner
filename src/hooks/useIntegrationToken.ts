@@ -34,7 +34,7 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 .select('access_token')
                 .eq('user_id', session.user.id)
                 .eq('provider', provider)
-                .single();
+                .maybeSingle(); // Use maybeSingle to avoid 406 if not found
 
             if (data) {
                 setToken(data.access_token);
@@ -51,9 +51,7 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
         try {
-            // Ensure profile exists first to satisfy foreign key constraint
-            // This is needed because the trigger only runs on NEW user creation
-            // and we might be logging in with an existing user who doesn't have a profile yet.
+            // Ensure profile exists first
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
@@ -63,7 +61,6 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
             if (profileError) {
                 console.warn('Error ensuring profile exists:', profileError);
-                // Continue anyway, maybe it exists and the error is something else
             }
 
             const { error } = await supabase
@@ -74,8 +71,8 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                     access_token: accessToken,
                     refresh_token: refreshToken,
                     updated_at: new Date().toISOString(),
-                    expires_at: new Date(Date.now() + 3600 * 1000).toISOString() // Assume 1 hour if unknown
-                }, { onConflict: 'user_id, provider' });
+                    expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
+                }, { onConflict: 'user_id,provider' }); // Remove space in onConflict
 
             if (error) console.error('Error saving token:', error);
         } catch (err) {
