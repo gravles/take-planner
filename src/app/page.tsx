@@ -27,7 +27,26 @@ export default function Home() {
   const { tasks, loading: tasksLoading, addTask, updateTask, deleteTask } = useTasks();
   const { categories, loading: categoriesLoading } = useCategories();
   const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
-  const { tasks: msToDoTasks } = useMicrosoftToDo();
+  const { tasks: msToDoTasks, toggleComplete: toggleMSToDoComplete } = useMicrosoftToDo();
+
+  // Map MS To Do tasks to our internal Task type
+  const mappedMSTasks: Task[] = msToDoTasks.map(msTask => ({
+    id: msTask.id, // Use MS ID directly (it's a string)
+    created_at: msTask.createdDateTime,
+    title: msTask.title,
+    description: msTask.body?.content || null,
+    duration_minutes: 15, // Default duration for external tasks
+    priority: msTask.importance === 'high' ? 'high' : msTask.importance === 'low' ? 'low' : 'medium',
+    status: msTask.status === 'completed' ? 'completed' : 'todo',
+    scheduled_at: null, // MS To Do tasks are unscheduled by default in our app
+    user_id: session?.user?.id || '',
+    source: 'microsoft_todo',
+    external_id: msTask.id,
+    completed_at: msTask.lastModifiedDateTime // Approximate
+  }));
+
+  // Combine local and external tasks
+  const allTasks = [...tasks, ...mappedMSTasks];
 
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
@@ -85,6 +104,16 @@ export default function Home() {
   }, [currentDate, viewMode, session]);
 
   const handleToggleComplete = async (task: Task) => {
+    // Handle Microsoft To Do tasks
+    if (task.source === 'microsoft_todo') {
+      const msTask = msToDoTasks.find(t => t.id === task.id);
+      if (msTask) {
+        await toggleMSToDoComplete(msTask);
+      }
+      return;
+    }
+
+    // Handle Supabase tasks
     const newStatus = task.status === 'completed' ? 'todo' : 'completed';
     const updates: Partial<Task> = { status: newStatus };
 
@@ -106,9 +135,9 @@ export default function Home() {
   );
 
   // Separate tasks into bench (unscheduled) and calendar (scheduled)
-  const benchTasks = tasks.filter(t => !t.scheduled_at);
+  const benchTasks = allTasks.filter(t => !t.scheduled_at);
 
-  const scheduledTasks = tasks.filter(t => {
+  const scheduledTasks = allTasks.filter(t => {
     if (!t.scheduled_at) return false;
     const taskDate = new Date(t.scheduled_at);
     return (

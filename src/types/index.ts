@@ -21,6 +21,8 @@ export interface Task {
     completed_at?: string | null;
     category_id?: string | null;
     category?: Category; // Joined category data
+    source?: 'supabase' | 'microsoft_todo';
+    external_id?: string;
 }
 
 export type NewTask = Omit<Task, 'id' | 'created_at' | 'user_id'>;

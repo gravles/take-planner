@@ -59,5 +59,42 @@ export function useMicrosoftToDo() {
         }
     }, [token]);
 
-    return { tasks, loading: loading || tokenLoading, error, fetchTasks };
+    const toggleComplete = async (task: MSToDoTask) => {
+        if (!token) return;
+
+        const newStatus = task.status === 'completed' ? 'notStarted' : 'completed';
+
+        // Optimistic update
+        setTasks(prev => prev.map(t =>
+            t.id === task.id ? { ...t, status: newStatus } : t
+        ));
+
+        try {
+            const response = await fetch(
+                `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/${task.id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        status: newStatus
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to update task status');
+            }
+        } catch (err) {
+            console.error('Error updating Microsoft To Do task:', err);
+            // Revert optimistic update
+            setTasks(prev => prev.map(t =>
+                t.id === task.id ? { ...t, status: task.status } : t
+            ));
+        }
+    };
+
+    return { tasks, loading: loading || tokenLoading, error, fetchTasks, toggleComplete };
 }
