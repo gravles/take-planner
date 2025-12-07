@@ -13,6 +13,8 @@ interface Profile {
     avatar_url: string | null;
 }
 
+import { useIntegrationToken } from '@/hooks/useIntegrationToken';
+
 export default function SettingsPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
@@ -22,6 +24,12 @@ export default function SettingsPage() {
     const [username, setUsername] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
+
+    // Initialize hooks to capture and save tokens after redirect
+    // This is CRITICAL: The hooks check the URL for ?connected_provider=... and save the session token to the DB.
+    // Without this, the token is lost after the OAuth redirect.
+    useIntegrationToken('google');
+    useIntegrationToken('azure');
 
     useEffect(() => {
         // Handle session check with onAuthStateChange to catch redirect updates
