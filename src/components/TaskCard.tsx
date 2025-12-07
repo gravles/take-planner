@@ -71,8 +71,9 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                 {...attributes}
                 className={cn(
                     cardClasses,
-                    "min-h-[24px]" // Slightly taller for better touch
+                    "min-h-[24px] cursor-pointer hover:ring-1 hover:ring-slate-200" // Slightly taller for better touch
                 )}
+                onClick={() => onEdit && onEdit(task)}
             >
                 {/* Priority Dot */}
                 {!isCompleted && (
@@ -80,7 +81,22 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                 )}
 
                 {/* Status Check (if completed) */}
-                {isCompleted && <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />}
+                {isCompleted ? (
+                    <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
+                ) : (
+                    onToggleComplete && (
+                        <button
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleComplete(task);
+                            }}
+                            className="w-3 h-3 rounded-full border border-slate-300 hover:border-green-500 hover:bg-green-500 text-transparent hover:text-white flex items-center justify-center transition-all shrink-0 p-0"
+                        >
+                            <CheckCircle className="w-2 h-2 fill-current" />
+                        </button>
+                    )
+                )}
 
                 {/* Category Indicator (Compact) */}
                 {task.category && !isCompleted && (
@@ -122,7 +138,10 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     {onToggleComplete && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => onToggleComplete(task)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleComplete(task);
+                            }}
                             className={cn(
                                 "mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0",
                                 isCompleted
@@ -213,7 +232,10 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     {onUnschedule && task.scheduled_at && !isCompleted && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => onUnschedule(task)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUnschedule(task);
+                            }}
                             className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-amber-600 transition-colors"
                             title="Unschedule"
                         >
@@ -223,7 +245,10 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     {onEdit && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => onEdit(task)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(task);
+                            }}
                             className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
                             title="Edit"
                         >
@@ -233,7 +258,10 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     {onDelete && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => onDelete(task)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(task);
+                            }}
                             className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-rose-600 transition-colors"
                             title="Delete"
                         >
@@ -243,7 +271,10 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     {onFocus && !isCompleted && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
-                            onClick={() => onFocus(task)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onFocus(task);
+                            }}
                             className="p-1.5 hover:bg-blue-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
                             title="Start Focus"
                         >
