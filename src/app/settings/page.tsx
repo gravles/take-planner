@@ -27,13 +27,7 @@ export default function SettingsPage() {
         // Handle session check with onAuthStateChange to catch redirect updates
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
-                // Check connected providers
-                if (session.user.identities) {
-                    const providers = session.user.identities.map((id: any) => id.provider);
-                    setConnectedProviders(providers);
-                }
-
-                // Fetch profile
+                // Fetch profile and integrations
                 fetchProfile(session.user.id);
             } else {
                 // Only redirect if we are sure there is no session and no hash processing happening
@@ -50,16 +44,18 @@ export default function SettingsPage() {
     async function fetchProfile(userId: string) {
         try {
             setLoading(true);
-            const { data, error } = await supabase
+
+            // Fetch profile
+            const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .single();
 
-            if (data) {
-                setProfile(data);
-                setFullName(data.full_name || '');
-                setUsername(data.username || '');
+            if (profileData) {
+                setProfile(profileData);
+                setFullName(profileData.full_name || '');
+                setUsername(profileData.username || '');
             } else {
                 // Fallback to auth metadata
                 const { data: { session } } = await supabase.auth.getSession();
@@ -67,6 +63,18 @@ export default function SettingsPage() {
                     setFullName(session.user.user_metadata.full_name || '');
                 }
             }
+
+            // Fetch integrations
+            const { data: integrationsData, error: integrationsError } = await supabase
+                .from('user_integrations')
+                .select('provider')
+                .eq('user_id', userId);
+
+            if (integrationsData) {
+                const dbProviders = integrationsData.map(i => i.provider);
+                setConnectedProviders(dbProviders);
+            }
+
         } catch (error) {
             console.error('Error loading user data:', error);
         } finally {
@@ -131,13 +139,18 @@ export default function SettingsPage() {
 
     async function handleConnect(provider: 'google' | 'azure') {
         try {
-            const { data, error } = await supabase.auth.linkIdentity({
+            // We use signInWithOAuth instead of linkIdentity to ensure we get a fresh access token
+            // in the session.provider_token field. linkIdentity often doesn't expose the new token
+            // in the session object, making it hard to capture.
+            // By signing in, we switch the active session, but our useIntegrationToken hook
+            // will capture and save the token to the database.
+            // Since we persist tokens for all providers, switching the active user is fine
+            // (as long as the accounts are linked or use the same email).
+            const { data, error } = await supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
                     // Use origin (home) to ensure it matches the allowed redirect URLs in Supabase
-                    // Redirecting to /settings might fail if not explicitly allowed
                     redirectTo: window.location.origin,
-                    // User.Read is required for Supabase to fetch the user's email/profile
                     // openid profile email are standard OIDC scopes to ensure we get the identity token
                     scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
                 }
@@ -146,7 +159,7 @@ export default function SettingsPage() {
             if (error) throw error;
             // The user will be redirected
         } catch (error: any) {
-            console.error('Error linking identity:', error);
+            console.error('Error connecting account:', error);
             setMessage({ type: 'error', text: 'Error connecting account: ' + error.message });
         }
     }
