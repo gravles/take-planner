@@ -108,7 +108,8 @@ export default function SettingsPage() {
                     // Use origin (home) to ensure it matches the allowed redirect URLs in Supabase
                     // Redirecting to /settings might fail if not explicitly allowed
                     redirectTo: window.location.origin,
-                    scopes: provider === 'azure' ? 'Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    // User.Read is required for Supabase to fetch the user's email/profile
+                    scopes: provider === 'azure' ? 'User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
                 }
             });
 
