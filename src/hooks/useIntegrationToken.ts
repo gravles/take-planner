@@ -51,6 +51,21 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
         try {
+            // Ensure profile exists first to satisfy foreign key constraint
+            // This is needed because the trigger only runs on NEW user creation
+            // and we might be logging in with an existing user who doesn't have a profile yet.
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: userId,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'id' });
+
+            if (profileError) {
+                console.warn('Error ensuring profile exists:', profileError);
+                // Continue anyway, maybe it exists and the error is something else
+            }
+
             const { error } = await supabase
                 .from('user_integrations')
                 .upsert({
