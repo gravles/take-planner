@@ -20,8 +20,6 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
             }
 
             // Determine the active provider for the current session
-            // We cannot rely solely on app_metadata.provider as it might be sticky (remain 'google' even if logged in with 'azure')
-            // We'll find the identity with the most recent last_sign_in_at
             let activeProvider = session.user.app_metadata.provider;
 
             if (session.user.identities && session.user.identities.length > 0) {
@@ -35,8 +33,11 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 }
             }
 
+            console.log(`[useIntegrationToken] Requested: ${provider}, Active: ${activeProvider}`);
+
             // Check if the active provider matches the requested provider
             if (activeProvider === provider && session.provider_token) {
+                console.log(`[useIntegrationToken] Using session token for ${provider}`);
                 setToken(session.provider_token);
                 // We should also save this to the DB for later
                 await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
@@ -44,16 +45,19 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
             }
 
             // If not, fetch from the database
+            console.log(`[useIntegrationToken] Fetching from DB for ${provider}`);
             const { data, error } = await supabase
                 .from('user_integrations')
                 .select('access_token')
                 .eq('user_id', session.user.id)
                 .eq('provider', provider)
-                .maybeSingle(); // Use maybeSingle to avoid 406 if not found
+                .maybeSingle();
 
             if (data) {
+                console.log(`[useIntegrationToken] Found DB token for ${provider}`);
                 setToken(data.access_token);
             } else {
+                console.log(`[useIntegrationToken] No DB token for ${provider}`);
                 setToken(null);
             }
         } catch (error) {
