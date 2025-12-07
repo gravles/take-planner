@@ -216,7 +216,7 @@ export default function Home() {
       return;
     }
 
-    // Dropped on Calendar Slot
+    // Dropped on Calendar Slot (Day View)
     const overId = over.id as string;
     if (overId.startsWith('slot-')) {
       const hour = over.data.current?.hour;
@@ -250,6 +250,49 @@ export default function Home() {
 
         await updateTask(taskId, { scheduled_at: scheduledAt.toISOString() });
       }
+      return;
+    }
+
+    // Dropped on Day Column (Week/Month View)
+    if (overId.startsWith('day-')) {
+      const dateStr = overId.replace('day-', '');
+      // Create date in local time to avoid timezone shifts
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const newDate = new Date(year, month - 1, day);
+
+      if (viewMode === 'week') {
+        // Calculate time based on drop position
+        const overRect = over.rect;
+        const activeRect = active.rect.current.translated;
+
+        if (overRect && activeRect) {
+          const relativeY = activeRect.top - overRect.top;
+          // WeekView starts at 7 AM, 60px per hour
+          // 1px = 1 minute
+          const minutesFrom7AM = Math.max(0, relativeY);
+          const hour = 7 + Math.floor(minutesFrom7AM / 60);
+          const minute = Math.floor(minutesFrom7AM % 60);
+
+          // Round to nearest 15 minutes for cleaner drops
+          const roundedMinute = Math.round(minute / 15) * 15;
+
+          newDate.setHours(hour, roundedMinute, 0, 0);
+        } else {
+          // Default to 9 AM if calculation fails
+          newDate.setHours(9, 0, 0, 0);
+        }
+      } else {
+        // Month View: Preserve existing time or default to 9 AM
+        if (task.scheduled_at) {
+          const oldDate = new Date(task.scheduled_at);
+          newDate.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+        } else {
+          newDate.setHours(9, 0, 0, 0);
+        }
+      }
+
+      await updateTask(taskId, { scheduled_at: newDate.toISOString() });
+      return;
     }
   };
 
