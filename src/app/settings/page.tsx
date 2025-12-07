@@ -150,7 +150,8 @@ export default function SettingsPage() {
                 provider: provider,
                 options: {
                     // Use origin (home) to ensure it matches the allowed redirect URLs in Supabase
-                    redirectTo: window.location.origin,
+                    // Append the provider param so we know which one we just connected when we get back
+                    redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
                     // openid profile email are standard OIDC scopes to ensure we get the identity token
                     scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
                 }

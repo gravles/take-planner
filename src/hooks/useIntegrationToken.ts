@@ -37,12 +37,20 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 }
             }
 
-            console.log(`[useIntegrationToken] Requested: ${provider}, Active (Calculated): ${activeProvider}`);
+            // CHECK URL PARAM: This is the most reliable signal.
+            // If we just came back from an OAuth flow, the URL will have ?connected_provider=...
+            const urlParams = new URLSearchParams(window.location.search);
+            const connectedProvider = urlParams.get('connected_provider');
 
-            // If the active provider matches the requested provider, we have a fresh token in the session.
-            // We should SAVE it to the DB to keep it fresh.
-            if (activeProvider === provider && session.provider_token) {
-                console.log(`[useIntegrationToken] Saving fresh session token for ${provider}`);
+            console.log(`[useIntegrationToken] Requested: ${provider}, Active (Calculated): ${activeProvider}, URL Param: ${connectedProvider}`);
+
+            // If the URL param matches the requested provider, we TRUST it explicitly.
+            // Or if the calculated active provider matches.
+            const isMatch = (connectedProvider === provider) || (activeProvider === provider);
+
+            // If we have a match and a token, SAVE it.
+            if (isMatch && session.provider_token) {
+                console.log(`[useIntegrationToken] Saving fresh session token for ${provider} (Match source: ${connectedProvider === provider ? 'URL' : 'Calculated'})`);
                 await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
             }
 
