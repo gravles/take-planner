@@ -109,7 +109,8 @@ export default function SettingsPage() {
                     // Redirecting to /settings might fail if not explicitly allowed
                     redirectTo: window.location.origin,
                     // User.Read is required for Supabase to fetch the user's email/profile
-                    scopes: provider === 'azure' ? 'User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    // openid profile email are standard OIDC scopes to ensure we get the identity token
+                    scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
                 }
             });
 
