@@ -114,7 +114,8 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
             style={style}
             {...listeners}
             {...attributes}
-            className={cardClasses}
+            className={cn(cardClasses, "cursor-pointer hover:ring-1 hover:ring-slate-200")}
+            onClick={() => onEdit && onEdit(task)}
         >
             <div className="flex justify-between items-start mb-1.5 gap-2">
                 <div className="flex items-start gap-2.5 flex-1 min-w-0">

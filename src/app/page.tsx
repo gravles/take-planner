@@ -10,6 +10,7 @@ import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings } from 'lucide-react';
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import Link from 'next/link';
 import { Auth } from '@/components/Auth';
 import { supabase } from '@/lib/supabase';
@@ -25,7 +26,7 @@ import { MonthView } from '@/components/MonthView';
 
 export default function Home() {
   const { tasks, loading: tasksLoading, addTask, updateTask, deleteTask } = useTasks();
-  const { categories, loading: categoriesLoading } = useCategories();
+  const { categories, loading: categoriesLoading, updateCategoryOrder } = useCategories();
   const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
   const { tasks: msToDoTasks } = useMicrosoftToDo();
 
@@ -172,6 +173,20 @@ export default function Home() {
 
     if (!over) return;
 
+    // Handle Category Reordering
+    if (active.id.toString().startsWith('category-') && over.id.toString().startsWith('category-')) {
+      if (active.id !== over.id) {
+        const oldIndex = categories.findIndex(c => `category-${c.id}` === active.id);
+        const newIndex = categories.findIndex(c => `category-${c.id}` === over.id);
+
+        if (oldIndex !== -1 && newIndex !== -1) {
+          const newCategories = arrayMove(categories, oldIndex, newIndex);
+          updateCategoryOrder(newCategories);
+        }
+      }
+      return;
+    }
+
     const taskId = active.id as string;
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -280,6 +295,7 @@ export default function Home() {
               onToggleComplete={handleToggleComplete}
               onDelete={handleDeleteTask}
               onUnschedule={handleUnscheduleTask}
+              onReorderCategories={updateCategoryOrder}
             />
             {/* Close button for mobile bench */}
             <button

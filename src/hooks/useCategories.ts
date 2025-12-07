@@ -37,7 +37,8 @@ export function useCategories() {
                 .from('categories')
                 .select('*')
                 .eq('user_id', session.user.id)
-                .order('name');
+                .eq('user_id', session.user.id)
+                .order('sort_order', { ascending: true });
 
             if (error) throw error;
             setCategories(data || []);
@@ -160,12 +161,34 @@ export function useCategories() {
         }
     }
 
+    async function updateCategoryOrder(orderedCategories: Category[]) {
+        try {
+            const updates = orderedCategories.map((cat, index) => ({
+                id: cat.id,
+                sort_order: index * 1000, // Spaced out for easier insertions
+                updated_at: new Date().toISOString()
+            }));
+
+            const { error } = await supabase
+                .from('categories')
+                .upsert(updates, { onConflict: 'id' });
+
+            if (error) throw error;
+
+            // Optimistic update
+            setCategories(orderedCategories);
+        } catch (error) {
+            console.error('Error updating category order:', error);
+        }
+    }
+
     return {
         categories,
         loading,
         addCategory,
         updateCategory,
         deleteCategory,
+        updateCategoryOrder,
         refreshCategories: fetchCategories
     };
 }
