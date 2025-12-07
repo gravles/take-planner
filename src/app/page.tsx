@@ -368,6 +368,15 @@ export default function Home() {
               {viewMode !== 'list' && (
                 <div className="flex items-center gap-1 md:gap-2 bg-slate-100/50 rounded-lg p-1 border border-slate-200/50">
                   <button
+                    onClick={() => {
+                      setCurrentDate(new Date());
+                      setViewMode('day');
+                    }}
+                    className="px-2 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white hover:shadow-sm rounded-md transition-all mr-1"
+                  >
+                    Today
+                  </button>
+                  <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
                     className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800"
                   >
