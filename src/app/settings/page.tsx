@@ -24,41 +24,48 @@ export default function SettingsPage() {
     const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
 
     useEffect(() => {
-        getProfile();
+        // Handle session check with onAuthStateChange to catch redirect updates
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                // Check connected providers
+                if (session.user.identities) {
+                    const providers = session.user.identities.map((id: any) => id.provider);
+                    setConnectedProviders(providers);
+                }
+
+                // Fetch profile
+                fetchProfile(session.user.id);
+            } else {
+                // Only redirect if we are sure there is no session and no hash processing happening
+                // But for now, let's just show loading or redirect after a timeout
+                // router.push('/'); 
+                // Better: let the user manually go back if needed, or redirect after delay
+                setLoading(false);
+            }
+        });
+
+        return () => subscription.unsubscribe();
     }, []);
 
-    async function getProfile() {
+    async function fetchProfile(userId: string) {
         try {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) {
-                router.push('/');
-                return;
-            }
-
-            // Check connected providers from identities
-            if (session.user.identities) {
-                const providers = session.user.identities.map((id: any) => id.provider);
-                setConnectedProviders(providers);
-            }
-
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('id', session.user.id)
+                .eq('id', userId)
                 .single();
-
-            if (error) {
-                console.warn('Error fetching profile:', error);
-            }
 
             if (data) {
                 setProfile(data);
                 setFullName(data.full_name || '');
                 setUsername(data.username || '');
             } else {
-                setFullName(session.user.user_metadata.full_name || '');
+                // Fallback to auth metadata
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    setFullName(session.user.user_metadata.full_name || '');
+                }
             }
         } catch (error) {
             console.error('Error loading user data:', error);
