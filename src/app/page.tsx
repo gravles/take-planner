@@ -29,24 +29,7 @@ export default function Home() {
   const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
   const { tasks: msToDoTasks, toggleComplete: toggleMSToDoComplete } = useMicrosoftToDo();
 
-  // Map MS To Do tasks to our internal Task type
-  const mappedMSTasks: Task[] = msToDoTasks.map(msTask => ({
-    id: msTask.id, // Use MS ID directly (it's a string)
-    created_at: msTask.createdDateTime,
-    title: msTask.title,
-    description: msTask.body?.content || null,
-    duration_minutes: 15, // Default duration for external tasks
-    priority: msTask.importance === 'high' ? 'high' : msTask.importance === 'low' ? 'low' : 'medium',
-    status: msTask.status === 'completed' ? 'completed' : 'todo',
-    scheduled_at: null, // MS To Do tasks are unscheduled by default in our app
-    user_id: session?.user?.id || '',
-    source: 'microsoft_todo',
-    external_id: msTask.id,
-    completed_at: msTask.lastModifiedDateTime // Approximate
-  }));
 
-  // Combine local and external tasks
-  const allTasks = [...tasks, ...mappedMSTasks];
 
   const [activeTask, setActiveTask] = useState<Task | null>(null); // For drag overlay
   const [focusTask, setFocusTask] = useState<Task | null>(null); // For timer
@@ -102,6 +85,25 @@ export default function Home() {
       fetchGoogleEvents(start, end);
     }
   }, [currentDate, viewMode, session]);
+
+  // Map MS To Do tasks to our internal Task type
+  const mappedMSTasks: Task[] = msToDoTasks.map(msTask => ({
+    id: msTask.id, // Use MS ID directly (it's a string)
+    created_at: msTask.createdDateTime,
+    title: msTask.title,
+    description: msTask.body?.content || null,
+    duration_minutes: 15, // Default duration for external tasks
+    priority: msTask.importance === 'high' ? 'high' : msTask.importance === 'low' ? 'low' : 'medium',
+    status: msTask.status === 'completed' ? 'completed' : 'todo',
+    scheduled_at: null, // MS To Do tasks are unscheduled by default in our app
+    user_id: session?.user?.id || '',
+    source: 'microsoft_todo',
+    external_id: msTask.id,
+    completed_at: msTask.lastModifiedDateTime // Approximate
+  }));
+
+  // Combine local and external tasks
+  const allTasks = [...tasks, ...mappedMSTasks];
 
   const handleToggleComplete = async (task: Task) => {
     // Handle Microsoft To Do tasks
