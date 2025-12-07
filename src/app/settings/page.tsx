@@ -100,6 +100,35 @@ export default function SettingsPage() {
         }
     }
 
+    async function handleDisconnect(provider: 'google' | 'azure') {
+        try {
+            setLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            // Delete from user_integrations
+            const { error } = await supabase
+                .from('user_integrations')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('provider', provider);
+
+            if (error) throw error;
+
+            // Update local state
+            setConnectedProviders(prev => prev.filter(p => p !== provider));
+            setMessage({ type: 'success', text: `Disconnected ${provider === 'google' ? 'Google' : 'Microsoft'} account.` });
+
+            // Refresh profile to ensure everything is synced
+            fetchProfile(session.user.id);
+        } catch (error: any) {
+            console.error('Error disconnecting:', error);
+            setMessage({ type: 'error', text: 'Error disconnecting: ' + error.message });
+        } finally {
+            setLoading(false);
+        }
+    }
+
     async function handleConnect(provider: 'google' | 'azure') {
         try {
             const { data, error } = await supabase.auth.linkIdentity({
@@ -215,9 +244,17 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                             {isGoogleConnected ? (
-                                <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
-                                    Connected
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
+                                        Connected
+                                    </span>
+                                    <button
+                                        onClick={() => handleDisconnect('google')}
+                                        className="text-sm text-red-600 hover:text-red-800 underline"
+                                    >
+                                        Disconnect
+                                    </button>
+                                </div>
                             ) : (
                                 <button
                                     onClick={() => handleConnect('google')}
@@ -240,9 +277,17 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                             {isAzureConnected ? (
-                                <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
-                                    Connected
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
+                                        Connected
+                                    </span>
+                                    <button
+                                        onClick={() => handleDisconnect('azure')}
+                                        className="text-sm text-red-600 hover:text-red-800 underline"
+                                    >
+                                        Disconnect
+                                    </button>
+                                </div>
                             ) : (
                                 <button
                                     onClick={() => handleConnect('azure')}
