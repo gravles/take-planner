@@ -153,7 +153,7 @@ export function useMicrosoftToDo() {
             if (existing) {
                 return {
                     ...t,
-                    id: existing.id,
+                    // id: existing.id, // REMOVED: Do not send ID, let onConflict handle it
                     scheduled_at: existing.scheduled_at,
                     duration_minutes: existing.duration_minutes,
                     // We overwrite category_id because MS To Do is the source of truth for lists
