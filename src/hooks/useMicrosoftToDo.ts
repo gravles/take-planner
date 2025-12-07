@@ -125,6 +125,14 @@ export function useMicrosoftToDo() {
             // Determine category_id from the listId we attached
             const categoryId = categoryMap.get(msTask.listId) || null;
 
+            // Map dueDateTime to scheduled_at
+            let scheduledAt = null;
+            if (msTask.dueDateTime) {
+                // MS Graph returns UTC usually, or the timezone specified.
+                // We'll trust the dateTime string.
+                scheduledAt = msTask.dueDateTime.dateTime;
+            }
+
             return {
                 user_id: session.user.id,
                 title: msTask.title,
@@ -135,7 +143,8 @@ export function useMicrosoftToDo() {
                 external_id: msTask.id,
                 created_at: msTask.createdDateTime,
                 duration_minutes: 15,
-                category_id: categoryId
+                category_id: categoryId,
+                scheduled_at: scheduledAt
             };
         });
 
@@ -151,12 +160,20 @@ export function useMicrosoftToDo() {
         const finalUpsertData = tasksToUpsert.map(t => {
             const existing = existingMap.get(t.external_id);
             if (existing) {
+                // If existing task has a scheduled_at that is DIFFERENT from the one we just mapped,
+                // we need to decide who wins.
+                // If we want two-way sync, we usually let the "latest" win, but we don't track modification time well.
+                // For now, let's assume if the user changed it locally, we keep local.
+                // BUT, if the user changed it in MS To Do (which we are fetching now), we should update local.
+
+                // Since we are in the "fetch from MS" flow, we assume MS is the source of truth for this moment.
+                // So we overwrite scheduled_at with what we got from MS.
+
                 return {
                     ...t,
                     // id: existing.id, // REMOVED: Do not send ID, let onConflict handle it
-                    scheduled_at: existing.scheduled_at,
+                    // scheduled_at: existing.scheduled_at, // REMOVED: Let MS overwrite schedule
                     duration_minutes: existing.duration_minutes,
-                    // We overwrite category_id because MS To Do is the source of truth for lists
                 };
             }
             return t;

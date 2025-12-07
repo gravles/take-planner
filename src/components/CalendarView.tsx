@@ -52,12 +52,37 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
             <h2 className="text-2xl font-bold mb-6 text-gray-800">Today's Schedule</h2>
 
             <div className="relative border rounded-xl bg-gray-50 min-h-[800px]">
+                {/* All Day / Due Today Slot */}
+                <CalendarSlot hour={0}>
+                    <div className="absolute inset-0 flex items-center px-2 text-xs text-gray-400 pointer-events-none">
+                        All Day / Due Today
+                    </div>
+                    {tasks.filter(t => {
+                        if (!t.scheduled_at) return false;
+                        const date = new Date(t.scheduled_at);
+                        return date.getHours() === 0 && date.getMinutes() === 0;
+                    }).map(task => (
+                        <div key={task.id} className="relative z-10 mb-1">
+                            <TaskCard
+                                task={task}
+                                categories={categories}
+                                onFocus={onFocus}
+                                onEdit={onEdit}
+                                isCompact={true}
+                                onToggleComplete={onToggleComplete}
+                                onUnschedule={onUnschedule}
+                                onDelete={onDelete}
+                            />
+                        </div>
+                    ))}
+                </CalendarSlot>
+
                 {hours.map(hour => {
-                    // Find tasks scheduled for this hour
+                    // Find tasks scheduled for this hour (excluding 00:00 which is All Day)
                     const slotTasks = tasks.filter(t => {
                         if (!t.scheduled_at) return false;
                         const date = new Date(t.scheduled_at);
-                        return date.getHours() === hour;
+                        return date.getHours() === hour && !(hour === 0);
                     });
 
                     // Find events for this hour

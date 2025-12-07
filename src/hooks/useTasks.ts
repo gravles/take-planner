@@ -55,8 +55,48 @@ export function useTasks() {
 
     async function addTask(newTask: NewTask) {
         try {
-            // Handle Microsoft To Do creation
-            if (newTask.source === 'microsoft_todo' && msToken) {
+            let externalId = null;
+            let source = newTask.source || 'supabase';
+
+            // Check if category belongs to Microsoft To Do
+            if (newTask.category_id && msToken) {
+                const { data: category } = await supabase
+                    .from('categories')
+                    .select('source, external_id')
+                    .eq('id', newTask.category_id)
+                    .single();
+
+                if (category?.source === 'microsoft_todo' && category.external_id) {
+                    source = 'microsoft_todo';
+                    // Create in MS To Do List
+                    const response = await fetch(
+                        `https://graph.microsoft.com/v1.0/me/todo/lists/${category.external_id}/tasks`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${msToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                title: newTask.title,
+                                importance: newTask.priority === 'high' ? 'high' : 'normal',
+                                dueDateTime: newTask.scheduled_at ? {
+                                    dateTime: newTask.scheduled_at,
+                                    timeZone: 'UTC'
+                                } : undefined
+                            })
+                        }
+                    );
+
+                    if (response.ok) {
+                        const msTask = await response.json();
+                        externalId = msTask.id;
+                    }
+                }
+            }
+
+            // Fallback: If source is explicitly MS To Do but no category (default list)
+            if (source === 'microsoft_todo' && !externalId && msToken) {
                 const response = await fetch(
                     'https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks',
                     {
@@ -74,14 +114,13 @@ export function useTasks() {
 
                 if (response.ok) {
                     const msTask = await response.json();
-                    newTask.external_id = msTask.id;
-                    // We continue to insert into Supabase below
+                    externalId = msTask.id;
                 }
             }
 
             const { data, error } = await supabase
                 .from('tasks')
-                .insert([newTask])
+                .insert([{ ...newTask, source, external_id: externalId }])
                 .select()
                 .single();
 
@@ -108,18 +147,55 @@ export function useTasks() {
                 if (updates.status) msUpdates.status = updates.status === 'completed' ? 'completed' : 'notStarted';
                 if (updates.priority) msUpdates.importance = updates.priority === 'high' ? 'high' : 'normal';
 
+                // Sync Scheduling
+                if (updates.scheduled_at !== undefined) {
+                    if (updates.scheduled_at === null) {
+                        // Clear due date
+                        msUpdates.dueDateTime = null;
+                    } else {
+                        // Set due date
+                        msUpdates.dueDateTime = {
+                            dateTime: updates.scheduled_at,
+                            timeZone: 'UTC'
+                        };
+                    }
+                }
+
                 if (Object.keys(msUpdates).length > 0) {
-                    await fetch(
-                        `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/${task.external_id}`,
-                        {
-                            method: 'PATCH',
-                            headers: {
-                                Authorization: `Bearer ${msToken}`,
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(msUpdates)
+                    // We need the list ID to update? No, /tasks/{id} works globally usually, 
+                    // BUT for MS To Do it's safer to use /me/todo/lists/tasks/tasks/{id} if it's in default,
+                    // or /me/todo/lists/{listId}/tasks/{taskId}.
+                    // However, the ID is unique. Let's try the generic endpoint or find the list.
+                    // Actually, we don't store the list ID on the task in Supabase (only category_id).
+                    // We can try updating via the generic /tasks endpoint if it exists, but MS Graph To Do API is list-centric.
+                    // Wait, `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/{id}` might only work for default list.
+
+                    // Actually, we can use the top-level /me/todo/lists to find it? No.
+                    // Correct way: We need to know the list ID.
+                    // We can get it from the category.
+
+                    let url = `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/${task.external_id}`; // Default fallback
+
+                    if (task.category_id) {
+                        const { data: category } = await supabase
+                            .from('categories')
+                            .select('external_id')
+                            .eq('id', task.category_id)
+                            .single();
+
+                        if (category?.external_id) {
+                            url = `https://graph.microsoft.com/v1.0/me/todo/lists/${category.external_id}/tasks/${task.external_id}`;
                         }
-                    );
+                    }
+
+                    await fetch(url, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: `Bearer ${msToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(msUpdates)
+                    });
                 }
             }
 
