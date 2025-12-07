@@ -105,7 +105,9 @@ export default function SettingsPage() {
             const { data, error } = await supabase.auth.linkIdentity({
                 provider: provider,
                 options: {
-                    redirectTo: window.location.origin + '/settings',
+                    // Use origin (home) to ensure it matches the allowed redirect URLs in Supabase
+                    // Redirecting to /settings might fail if not explicitly allowed
+                    redirectTo: window.location.origin,
                     scopes: provider === 'azure' ? 'Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
                 }
             });
