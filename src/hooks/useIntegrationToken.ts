@@ -21,8 +21,11 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
             }
 
             // Determine the active provider for the current session
-            const appMetadataProvider = session.user.app_metadata.provider;
-            let calculatedProvider = appMetadataProvider;
+            // We use last_sign_in_at to determine which identity is currently "active" in the session
+            // and therefore which provider the session.provider_token belongs to.
+            // app_metadata.provider can be sticky (stays 'google' even if we just signed in with 'azure'),
+            // so we cannot trust it for the *session token* identity.
+            let activeProvider = session.user.app_metadata.provider;
 
             if (session.user.identities && session.user.identities.length > 0) {
                 // Sort identities by last_sign_in_at descending
@@ -30,28 +33,22 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                     return new Date(b.last_sign_in_at || 0).getTime() - new Date(a.last_sign_in_at || 0).getTime();
                 });
                 if (sortedIdentities[0]) {
-                    calculatedProvider = sortedIdentities[0].provider;
+                    activeProvider = sortedIdentities[0].provider;
                 }
             }
 
-            console.log(`[useIntegrationToken] AppMetadata: ${appMetadataProvider}, Calculated: ${calculatedProvider}`);
+            console.log(`[useIntegrationToken] Requested: ${provider}, Active (Calculated): ${activeProvider}`);
 
-            // Trust app_metadata.provider as the primary source for the CURRENT session
-            const activeProvider = appMetadataProvider || calculatedProvider;
-
-            console.log(`[useIntegrationToken] Requested: ${provider}, Active: ${activeProvider}`);
-
-            // Check if the active provider matches the requested provider
+            // If the active provider matches the requested provider, we have a fresh token in the session.
+            // We should SAVE it to the DB to keep it fresh.
             if (activeProvider === provider && session.provider_token) {
-                console.log(`[useIntegrationToken] Using session token for ${provider}`);
-                setToken(session.provider_token);
-                // We should also save this to the DB for later
+                console.log(`[useIntegrationToken] Saving fresh session token for ${provider}`);
                 await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
-                setLoading(false);
-                return;
             }
 
-            // If not, fetch from the database
+            // ALWAYS fetch from the database to return the token.
+            // This ensures we get the token specifically associated with the requested provider,
+            // avoiding any ambiguity about what session.provider_token currently holds.
             console.log(`[useIntegrationToken] Fetching from DB for ${provider}`);
             const { data, error } = await supabase
                 .from('user_integrations')
