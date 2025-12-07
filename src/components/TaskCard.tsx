@@ -38,12 +38,12 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
     };
 
     const cardClasses = cn(
-        'relative group bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing touch-none overflow-hidden',
-        isDragging && 'opacity-50 z-50 rotate-2 scale-105',
-        isCompleted ? 'bg-gray-50' : 'bg-white',
+        'relative group bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-grab active:cursor-grabbing touch-none overflow-hidden',
+        isDragging && 'opacity-50 z-50 rotate-2 scale-105 shadow-xl ring-2 ring-blue-500/20',
+        isCompleted ? 'bg-slate-50 opacity-75' : 'bg-white',
         isCompact
-            ? 'rounded-md px-2 py-1 h-full flex items-center gap-2 text-xs'
-            : `rounded-lg p-3 h-full flex flex-col border-l-4 ${priorityColors[task.priority]}`
+            ? 'rounded-lg px-2 py-1 h-full flex items-center gap-2 text-xs border border-transparent hover:border-slate-200'
+            : 'rounded-xl p-3.5 h-full flex flex-col border border-slate-100'
     );
 
     const formattedTime = task.scheduled_at
@@ -53,6 +53,13 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
     const completedTime = task.completed_at
         ? format(new Date(task.completed_at), 'h:mm a')
         : null;
+
+    // Priority Dot Color
+    const priorityDotColor = {
+        low: 'bg-blue-400',
+        medium: 'bg-amber-400',
+        high: 'bg-rose-500',
+    };
 
     // Compact View (Week/Month)
     if (isCompact) {
@@ -64,21 +71,21 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                 {...attributes}
                 className={cn(
                     cardClasses,
-                    "min-h-[20px]" // Allow it to be small
+                    "min-h-[24px]" // Slightly taller for better touch
                 )}
             >
-                {/* Status Indicator */}
-                <div className={cn(
-                    "w-1.5 h-1.5 rounded-full shrink-0",
-                    isCompleted ? "bg-green-500" :
-                        task.priority === 'high' ? "bg-red-500" :
-                            task.priority === 'medium' ? "bg-yellow-500" : "bg-blue-500"
-                )} />
+                {/* Priority Dot */}
+                {!isCompleted && (
+                    <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", priorityDotColor[task.priority])} />
+                )}
+
+                {/* Status Check (if completed) */}
+                {isCompleted && <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />}
 
                 {/* Category Indicator (Compact) */}
                 {task.category && !isCompleted && (
                     <div
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        className="w-1.5 h-1.5 rounded-full shrink-0 ring-1 ring-inset ring-black/5"
                         style={{ backgroundColor: task.category.color }}
                         title={task.category.name}
                     />
@@ -86,30 +93,16 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
 
                 {/* Time (if requested) */}
                 {showTime && formattedTime && !isCompleted && (
-                    <span className="text-gray-600 font-medium shrink-0">{formattedTime}</span>
+                    <span className="text-slate-500 font-medium shrink-0 tracking-tight">{formattedTime}</span>
                 )}
 
                 {/* Title */}
                 <span className={cn(
-                    "truncate font-medium flex-1 text-gray-900",
-                    isCompleted && "line-through text-gray-500"
+                    "truncate font-medium flex-1 text-slate-700",
+                    isCompleted && "line-through text-slate-400"
                 )}>
                     {task.title}
                 </span>
-
-                {/* Hover Actions */}
-                <div className="hidden group-hover:flex items-center gap-1 bg-white/90 absolute right-1 top-1/2 -translate-y-1/2 px-1 rounded shadow-sm">
-                    {onToggleComplete && (
-                        <button onClick={() => onToggleComplete(task)} className="p-0.5 hover:text-green-600">
-                            <CheckCircle className="w-3 h-3" />
-                        </button>
-                    )}
-                    {onDelete && (
-                        <button onClick={() => onDelete(task)} className="p-0.5 hover:text-red-600">
-                            <Trash2 className="w-3 h-3" />
-                        </button>
-                    )}
-                </div>
             </div>
         );
     }
@@ -123,67 +116,87 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
             {...attributes}
             className={cardClasses}
         >
-            <div className="flex justify-between items-start mb-1">
-                <div className="flex items-start gap-2 flex-1">
+            <div className="flex justify-between items-start mb-1.5 gap-2">
+                <div className="flex items-start gap-2.5 flex-1 min-w-0">
                     {onToggleComplete && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onToggleComplete(task)}
                             className={cn(
-                                "mt-0.5 p-0.5 rounded-full transition-colors shrink-0",
-                                isCompleted ? "text-green-500 hover:text-green-600" : "text-gray-400 hover:text-green-500"
+                                "mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0",
+                                isCompleted
+                                    ? "bg-green-500 border-green-500 text-white"
+                                    : "border-slate-300 hover:border-green-500 text-transparent hover:text-green-500 bg-white"
                             )}
                         >
-                            <CheckCircle className="w-4 h-4" />
+                            <CheckCircle className="w-3.5 h-3.5 fill-current" />
                         </button>
                     )}
-                    <div className="flex flex-col">
-                        <h3 className={cn("font-medium text-sm leading-tight text-gray-900", isCompleted && "line-through text-gray-500")}>
+                    <div className="flex flex-col min-w-0">
+                        <h3 className={cn(
+                            "font-semibold text-[13px] leading-snug text-slate-800 break-words",
+                            isCompleted && "line-through text-slate-400"
+                        )}>
                             {task.title}
                         </h3>
+
+                        {/* Metadata Row */}
+                        <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                            {/* Category Badge */}
+                            {task.category && !isCompleted && (
+                                <span
+                                    className="text-[10px] px-2 py-0.5 rounded-full font-medium ring-1 ring-inset ring-black/5"
+                                    style={{ backgroundColor: `${task.category.color}15`, color: task.category.color }}
+                                >
+                                    {task.category.name}
+                                </span>
+                            )}
+
+                            {/* Priority Badge (if high/medium) */}
+                            {!isCompleted && task.priority !== 'low' && (
+                                <span className={cn(
+                                    "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1",
+                                    task.priority === 'high' ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
+                                )}>
+                                    <div className={cn("w-1 h-1 rounded-full", task.priority === 'high' ? "bg-rose-500" : "bg-amber-500")} />
+                                    {task.priority === 'high' ? 'High' : 'Medium'}
+                                </span>
+                            )}
+                        </div>
+
                         {/* Completion Timestamp */}
                         {isCompleted && completedTime && (
-                            <span className="text-[10px] text-green-700 font-medium mt-0.5">
-                                Done at {completedTime}
-                            </span>
-                        )}
-                        {/* Category Badge */}
-                        {task.category && !isCompleted && (
-                            <span
-                                className="text-[10px] px-1.5 py-0.5 rounded-full font-medium mt-1 self-start"
-                                style={{ backgroundColor: `${task.category.color}20`, color: task.category.color }}
-                            >
-                                {task.category.name}
+                            <span className="text-[10px] text-slate-400 font-medium mt-1">
+                                Completed {completedTime}
                             </span>
                         )}
                     </div>
                 </div>
-                {task.priority === 'high' && !isCompleted && <AlertCircle className="w-3.5 h-3.5 text-red-600 shrink-0 ml-1" />}
             </div>
 
             {/* Scheduled Time Display */}
             {task.scheduled_at && !isCompleted && (
-                <div className="flex items-center gap-1 text-[10px] text-gray-600 mb-2 font-medium">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-2 font-medium bg-slate-50 self-start px-2 py-1 rounded-md">
                     <CalendarIcon className="w-3 h-3" />
                     <span>{format(new Date(task.scheduled_at), 'MMM d • h:mm a')}</span>
                 </div>
             )}
 
-            <div className="mt-auto flex items-center justify-between">
-                <div className="flex items-center text-xs text-gray-600 gap-2">
+            <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-50">
+                <div className="flex items-center text-xs text-slate-500 gap-2">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>{task.duration_minutes}m</span>
                     </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Action Buttons - Floating Pill on Hover */}
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white shadow-sm border border-slate-100 rounded-lg p-0.5">
                     {onUnschedule && task.scheduled_at && !isCompleted && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onUnschedule(task)}
-                            className="p-1.5 hover:bg-orange-50 rounded-md text-gray-400 hover:text-orange-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-amber-600 transition-colors"
                             title="Unschedule"
                         >
                             <MinusCircle className="w-3.5 h-3.5" />
@@ -193,7 +206,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onEdit(task)}
-                            className="p-1.5 hover:bg-gray-100 rounded-md text-gray-400 hover:text-black transition-colors"
+                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
                             title="Edit"
                         >
                             <Pencil className="w-3.5 h-3.5" />
@@ -203,7 +216,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onDelete(task)}
-                            className="p-1.5 hover:bg-red-50 rounded-md text-gray-400 hover:text-red-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-rose-600 transition-colors"
                             title="Delete"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -213,7 +226,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
                             onClick={() => onFocus(task)}
-                            className="p-1.5 hover:bg-blue-50 rounded-md text-gray-400 hover:text-blue-600 transition-colors"
+                            className="p-1.5 hover:bg-blue-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
                             title="Start Focus"
                         >
                             <Play className="w-3.5 h-3.5 fill-current" />

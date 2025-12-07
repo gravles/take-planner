@@ -22,21 +22,21 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     });
 
     return (
-        <div key={hour} className="flex border-b border-gray-200 h-[120px] last:border-0">
-            <div className="w-16 flex-shrink-0 text-right pr-4 py-2 text-sm text-gray-500 font-medium">
+        <div key={hour} className="flex border-b border-slate-100 h-[120px] last:border-0">
+            <div className="w-16 flex-shrink-0 text-right pr-4 py-2 text-xs text-slate-400 font-medium">
                 {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
             </div>
             <div
                 ref={setNodeRef}
                 className={cn(
-                    "flex-1 relative border-l border-gray-100 transition-colors group",
-                    isOver ? "bg-blue-50" : "hover:bg-gray-100/50"
+                    "flex-1 relative border-l border-slate-100 transition-colors group",
+                    isOver ? "bg-blue-50/50" : "hover:bg-slate-50/50"
                 )}
             >
-                {/* 15-minute markers */}
-                <div className="absolute w-full border-t border-gray-50 border-dashed top-1/4 pointer-events-none"></div>
-                <div className="absolute w-full border-t border-gray-100 border-dashed top-2/4 pointer-events-none"></div>
-                <div className="absolute w-full border-t border-gray-50 border-dashed top-3/4 pointer-events-none"></div>
+                {/* 15-minute markers (Subtle) */}
+                <div className="absolute w-full border-t border-slate-50 border-dashed top-1/4 pointer-events-none"></div>
+                <div className="absolute w-full border-t border-slate-100 border-dashed top-2/4 pointer-events-none"></div>
+                <div className="absolute w-full border-t border-slate-50 border-dashed top-3/4 pointer-events-none"></div>
                 {children}
             </div>
         </div>
@@ -48,13 +48,13 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
 
     return (
-        <div className="flex-1 h-screen overflow-y-auto bg-white p-6">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Today's Schedule</h2>
+        <div className="flex-1 h-screen overflow-y-auto bg-white/50 p-6">
+            <h2 className="text-2xl font-bold mb-6 text-slate-800 tracking-tight">Today's Schedule</h2>
 
-            <div className="relative border rounded-xl bg-gray-50 min-h-[800px]">
+            <div className="relative border border-slate-200 rounded-2xl bg-white shadow-sm min-h-[800px] overflow-hidden">
                 {/* All Day / Due Today Slot */}
                 <CalendarSlot hour={0}>
-                    <div className="absolute inset-0 flex items-center px-2 text-xs text-gray-400 pointer-events-none">
+                    <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-slate-400 pointer-events-none bg-slate-50/50">
                         All Day / Due Today
                     </div>
                     {tasks.filter(t => {

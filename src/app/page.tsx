@@ -291,26 +291,26 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col h-screen relative w-full">
-          <header className="h-16 border-b flex items-center justify-between px-4 md:px-6 bg-white shrink-0 gap-2">
+        <div className="flex-1 flex flex-col h-screen relative w-full bg-slate-50/50">
+          <header className="h-16 border-b border-slate-200/60 flex items-center justify-between px-4 md:px-6 bg-white/80 backdrop-blur-md sticky top-0 z-30 shrink-0 gap-2">
             <div className="flex items-center gap-2 md:gap-4">
               {/* Mobile Bench Toggle */}
               {viewMode !== 'list' && (
                 <button
                   onClick={() => setIsBenchOpen(true)}
-                  className="p-2 -ml-2 hover:bg-gray-100 rounded-lg md:hidden"
+                  className="p-2 -ml-2 hover:bg-slate-100 rounded-lg md:hidden text-slate-600"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
               )}
 
-              <h1 className="text-lg md:text-xl font-bold text-gray-800 truncate hidden sm:block">My Planner</h1>
+              <h1 className="text-lg md:text-xl font-bold text-slate-800 truncate hidden sm:block tracking-tight">My Planner</h1>
 
               {viewMode !== 'list' && (
-                <div className="flex items-center gap-1 md:gap-2 bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center gap-1 md:gap-2 bg-slate-100/50 rounded-lg p-1 border border-slate-200/50">
                   <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
-                    className="p-1 hover:bg-white rounded-md transition-colors"
+                    className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -319,36 +319,36 @@ export default function Home() {
 
                   <button
                     onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
-                    className="p-1 hover:bg-white rounded-md transition-colors"
+                    className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               )}
 
-              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-1 bg-slate-100/80 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar border border-slate-200/50">
                 <button
                   onClick={() => setViewMode('day')}
-                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'day' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
                 >
                   Day
                 </button>
                 <button
                   onClick={() => setViewMode('week')}
-                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'week' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
                 >
                   Week
                 </button>
                 <button
                   onClick={() => setViewMode('month')}
-                  className={`px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-colors ${viewMode === 'month' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'month' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
                 >
                   Month
                 </button>
-                <div className="w-px h-4 bg-gray-300 mx-1 hidden sm:block" />
+                <div className="w-px h-4 bg-slate-300 mx-1 hidden sm:block" />
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-black'}`}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
                   title="List View"
                 >
                   <LayoutList className="w-4 h-4" />
@@ -357,7 +357,7 @@ export default function Home() {
             </div>
             <button
               onClick={handleCreateTask}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs md:text-sm font-medium whitespace-nowrap shrink-0"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs md:text-sm font-medium whitespace-nowrap shrink-0 shadow-md shadow-slate-900/10"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">New Task</span>
@@ -367,7 +367,7 @@ export default function Home() {
             <div className="relative ml-2">
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-black transition-colors"
+                className="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-900 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -381,27 +381,30 @@ export default function Home() {
               )}
 
               {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="px-4 py-2 border-b border-gray-50">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-4 py-3 border-b border-slate-50">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Signed in as</p>
+                    <p className="text-sm font-medium text-slate-900 truncate">
                       {session.user.email}
                     </p>
                   </div>
-                  <Link
-                    href="/settings"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    onClick={() => setIsUserMenuOpen(false)}
-                  >
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </Link>
-                  <button
-                    onClick={() => supabase.auth.signOut()}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Sign Out
-                  </button>
+                  <div className="p-1">
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={() => supabase.auth.signOut()}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
