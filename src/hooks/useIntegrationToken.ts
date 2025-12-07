@@ -19,9 +19,24 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 return;
             }
 
-            // First, check if the current session IS the provider we want
-            // This is the most fresh token
-            if (session.user.app_metadata.provider === provider && session.provider_token) {
+            // Determine the active provider for the current session
+            // We cannot rely solely on app_metadata.provider as it might be sticky (remain 'google' even if logged in with 'azure')
+            // We'll find the identity with the most recent last_sign_in_at
+            let activeProvider = session.user.app_metadata.provider;
+
+            if (session.user.identities && session.user.identities.length > 0) {
+                // Sort identities by last_sign_in_at descending
+                const sortedIdentities = [...session.user.identities].sort((a, b) => {
+                    return new Date(b.last_sign_in_at || 0).getTime() - new Date(a.last_sign_in_at || 0).getTime();
+                });
+                // The first one is likely the active one
+                if (sortedIdentities[0]) {
+                    activeProvider = sortedIdentities[0].provider;
+                }
+            }
+
+            // Check if the active provider matches the requested provider
+            if (activeProvider === provider && session.provider_token) {
                 setToken(session.provider_token);
                 // We should also save this to the DB for later
                 await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
