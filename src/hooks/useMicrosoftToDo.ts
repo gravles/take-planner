@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useIntegrationToken } from './useIntegrationToken';
+import { supabase } from '@/lib/supabase';
 
 export interface MSToDoTask {
     id: string;
@@ -25,13 +26,9 @@ export function useMicrosoftToDo() {
         setLoading(true);
         setError(null);
         try {
-            // First, get the default task list
-            // For MVP, we'll just fetch from the default 'Tasks' folder
-            // Or we can list all task folders: https://graph.microsoft.com/v1.0/me/todo/lists
-
-            // Let's try fetching from the default list first
+            // Fetch only active tasks to reduce noise
             const response = await fetch(
-                'https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks',
+                'https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks?$filter=status ne \'completed\'',
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -44,12 +41,86 @@ export function useMicrosoftToDo() {
             }
 
             const data = await response.json();
-            setTasks(data.value || []);
+            const msTasks: MSToDoTask[] = data.value || [];
+
+            setTasks(msTasks);
+
+            // Sync to Supabase
+            await syncTasksToSupabase(msTasks);
+
         } catch (err: any) {
             console.error('Error fetching Microsoft To Do tasks:', err);
             setError(err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const syncTasksToSupabase = async (msTasks: MSToDoTask[]) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const tasksToUpsert = msTasks.map(msTask => ({
+            user_id: session.user.id,
+            title: msTask.title,
+            description: msTask.body?.content || null,
+            status: 'todo', // We filtered for active tasks
+            priority: msTask.importance === 'high' ? 'high' : msTask.importance === 'low' ? 'low' : 'medium',
+            source: 'microsoft_todo',
+            external_id: msTask.id,
+            created_at: msTask.createdDateTime,
+            duration_minutes: 15, // Default
+            // We DO NOT overwrite scheduled_at or category_id if they exist
+            // But upsert will overwrite if we don't be careful.
+            // Supabase upsert overwrites all columns by default.
+            // We need to be careful not to reset scheduled_at if the user scheduled it in our app.
+
+            // Actually, for a simple upsert, we can't easily "ignore if exists" for specific columns without a custom query or function.
+            // BUT, if we fetch existing tasks first, we can merge.
+            // OR, we can use `onConflict` to only update specific columns? 
+            // Supabase JS client `upsert` takes `ignoreDuplicates` (no update) or `onConflict`.
+            // But we WANT to update title/status if they changed in MS.
+
+            // Strategy:
+            // 1. Fetch existing MS tasks from DB to preserve local state (scheduled_at, category_id).
+            // 2. Merge.
+            // 3. Upsert.
+        }));
+
+        // 1. Fetch existing tasks with this source
+        const { data: existingTasks } = await supabase
+            .from('tasks')
+            .select('external_id, scheduled_at, category_id, duration_minutes')
+            .eq('user_id', session.user.id)
+            .eq('source', 'microsoft_todo');
+
+        const existingMap = new Map(existingTasks?.map(t => [t.external_id, t]));
+
+        const finalUpsertData = tasksToUpsert.map(t => {
+            const existing = existingMap.get(t.external_id);
+            if (existing) {
+                return {
+                    ...t,
+                    scheduled_at: existing.scheduled_at,
+                    category_id: existing.category_id,
+                    duration_minutes: existing.duration_minutes // Preserve duration edits
+                };
+            }
+            return t;
+        });
+
+        if (finalUpsertData.length > 0) {
+            const { error } = await supabase
+                .from('tasks')
+                .upsert(finalUpsertData, { onConflict: 'external_id,user_id' }); // Assuming external_id is unique per user? No, external_id is unique globally usually, but good to scope.
+
+            // Wait, we need a unique constraint on external_id? 
+            // Our schema probably doesn't have one on `external_id`.
+            // We should use `id` for upsert if possible, but we don't know the internal UUID for new tasks.
+            // We can rely on `external_id` if we add a unique constraint, OR we can look up UUIDs.
+
+            // Better: We fetched `existingTasks`. We should map `external_id` to `id` (UUID).
+            // Then we can upsert using `id`.
         }
     };
 

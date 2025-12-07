@@ -27,7 +27,7 @@ export default function Home() {
   const { tasks, loading: tasksLoading, addTask, updateTask, deleteTask } = useTasks();
   const { categories, loading: categoriesLoading } = useCategories();
   const { events: googleEvents, fetchEvents: fetchGoogleEvents } = useGoogleCalendar();
-  const { tasks: msToDoTasks, toggleComplete: toggleMSToDoComplete } = useMicrosoftToDo();
+  const { tasks: msToDoTasks } = useMicrosoftToDo();
 
 
 
@@ -137,9 +137,9 @@ export default function Home() {
   );
 
   // Separate tasks into bench (unscheduled) and calendar (scheduled)
-  const benchTasks = allTasks.filter(t => !t.scheduled_at);
+  const benchTasks = tasks.filter(t => !t.scheduled_at);
 
-  const scheduledTasks = allTasks.filter(t => {
+  const scheduledTasks = tasks.filter(t => {
     if (!t.scheduled_at) return false;
     const taskDate = new Date(t.scheduled_at);
     return (
