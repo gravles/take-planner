@@ -1,5 +1,5 @@
 import { Task, Category } from '@/types';
-import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle, Trash2, Calendar as CalendarIcon } from 'lucide-react';
+import { Clock, AlertCircle, Play, Pencil, CheckCircle, MinusCircle, Trash2, Calendar as CalendarIcon, Bell, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDraggable } from '@dnd-kit/core';
 import { format } from 'date-fns';
@@ -162,6 +162,23 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                     <div className={cn("w-1 h-1 rounded-full", task.priority === 'high' ? "bg-rose-500" : "bg-amber-500")} />
                                     {task.priority === 'high' ? 'High' : 'Medium'}
                                 </span>
+                            )}
+
+                            {/* Reminder Indicator */}
+                            {task.reminder_at && !isCompleted && (
+                                <span className="text-slate-400" title={`Reminder: ${format(new Date(task.reminder_at), 'h:mm a')}`}>
+                                    <Bell className="w-3 h-3" />
+                                </span>
+                            )}
+
+                            {/* Notes Indicator */}
+                            {task.description && !isCompleted && (
+                                <div className="group/note relative">
+                                    <FileText className="w-3 h-3 text-slate-400" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover/note:opacity-100 transition-opacity pointer-events-none z-50">
+                                        <p className="line-clamp-3">{task.description}</p>
+                                    </div>
+                                </div>
                             )}
                         </div>
 

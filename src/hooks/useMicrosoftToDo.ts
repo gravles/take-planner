@@ -11,6 +11,7 @@ export interface MSToDoTask {
     createdDateTime: string;
     lastModifiedDateTime: string;
     dueDateTime?: { dateTime: string; timeZone: string };
+    reminderDateTime?: { dateTime: string; timeZone: string };
     body?: { content: string; contentType: string };
 }
 
@@ -128,9 +129,13 @@ export function useMicrosoftToDo() {
             // Map dueDateTime to scheduled_at
             let scheduledAt = null;
             if (msTask.dueDateTime) {
-                // MS Graph returns UTC usually, or the timezone specified.
-                // We'll trust the dateTime string.
                 scheduledAt = msTask.dueDateTime.dateTime;
+            }
+
+            // Map reminderDateTime to reminder_at
+            let reminderAt = null;
+            if (msTask.reminderDateTime) {
+                reminderAt = msTask.reminderDateTime.dateTime;
             }
 
             return {
@@ -144,7 +149,8 @@ export function useMicrosoftToDo() {
                 created_at: msTask.createdDateTime,
                 duration_minutes: 15,
                 category_id: categoryId,
-                scheduled_at: scheduledAt
+                scheduled_at: scheduledAt,
+                reminder_at: reminderAt
             };
         });
 

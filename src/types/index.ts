@@ -21,6 +21,7 @@ export interface Task {
     scheduled_at: string | null;
     user_id: string;
     completed_at?: string | null;
+    reminder_at?: string | null;
     category_id?: string | null;
     category?: Category; // Joined category data
     source?: 'supabase' | 'microsoft_todo';
