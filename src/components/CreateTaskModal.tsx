@@ -90,27 +90,27 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
 
     return (
         <>
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
-                <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40">
+                <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md p-6 relative border border-slate-200 dark:border-slate-800">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                         <X className="w-5 h-5" />
                     </button>
 
-                    <h2 className="text-xl font-bold mb-6 text-gray-800">
+                    <h2 className="text-xl font-bold mb-6 text-gray-800 dark:text-slate-100">
                         {initialTask ? 'Edit Task' : 'Create New Task'}
                     </h2>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Title</label>
                             <input
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                                 placeholder="What needs to be done?"
                                 required
                                 autoFocus
@@ -118,25 +118,25 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Description</label>
                             <textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none resize-none h-20"
+                                className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none resize-none h-20 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                                 placeholder="Add details..."
                             />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Duration (min)</label>
                                 <div className="relative">
                                     <Clock className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                                     <input
                                         type="number"
                                         value={duration}
                                         onChange={(e) => setDuration(Number(e.target.value))}
-                                        className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                                        className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                                         min="5"
                                         step="5"
                                     />
@@ -144,11 +144,11 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Priority</label>
                                 <select
                                     value={priority}
                                     onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                                 >
                                     <option value="low">Low</option>
                                     <option value="medium">Medium</option>
@@ -160,11 +160,11 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                         {/* Category Selection */}
                         <div>
                             <div className="flex justify-between items-center mb-1">
-                                <label className="block text-sm font-medium text-gray-700">Category</label>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-slate-300">Category</label>
                                 <button
                                     type="button"
                                     onClick={() => setIsCategoryManagerOpen(true)}
-                                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
                                 >
                                     <Settings className="w-3 h-3" /> Manage
                                 </button>
@@ -174,7 +174,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                                 <select
                                     value={categoryId}
                                     onChange={(e) => setCategoryId(e.target.value)}
-                                    className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none appearance-none bg-white"
+                                    className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none appearance-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
                                 >
                                     <option value="">No Category</option>
                                     {categories.map(cat => (
@@ -187,7 +187,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Schedule (Optional)</label>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Schedule (Optional)</label>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="relative">
                                     <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -195,27 +195,27 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                                         type="date"
                                         value={scheduledDate}
                                         onChange={(e) => setScheduledDate(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                                        className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 [color-scheme:light] dark:[color-scheme:dark]"
                                     />
                                 </div>
                                 <input
                                     type="time"
                                     value={scheduledTime}
                                     onChange={(e) => setScheduledTime(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
+                                    className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 [color-scheme:light] dark:[color-scheme:dark]"
                                 />
                             </div>
 
                             {/* Recurrence Dropdown */}
                             {scheduledDate && (
                                 <div className="mt-3">
-                                    <label className="block text-xs font-medium text-gray-500 mb-1">Repeat</label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Repeat</label>
                                     <div className="relative">
                                         <Repeat className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                                         <select
                                             value={recurrence}
                                             onChange={(e) => setRecurrence(e.target.value as any)}
-                                            className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none appearance-none bg-white text-sm"
+                                            className="w-full pl-9 pr-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-slate-500 focus:border-transparent outline-none appearance-none bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100"
                                         >
                                             <option value="">Does not repeat</option>
                                             <option value="daily">Daily</option>
@@ -242,14 +242,14 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="px-4 py-2 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={!title.trim() || isSubmitting}
-                                className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-black dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg hover:bg-gray-800 dark:hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? 'Saving...' : (initialTask ? 'Save Changes' : 'Create Task')}
                             </button>

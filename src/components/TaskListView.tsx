@@ -94,33 +94,33 @@ export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleCompl
     };
 
     return (
-        <div className="flex-1 h-screen overflow-y-auto bg-white p-8">
+        <div className="flex-1 h-screen overflow-y-auto bg-white dark:bg-slate-950/50 p-8">
             <div className="max-w-5xl mx-auto space-y-12">
-                <h2 className="text-2xl font-bold text-gray-800">All Tasks</h2>
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">All Tasks</h2>
 
                 {/* Unscheduled Tasks */}
                 <section>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                         Unscheduled
-                        <span className="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">{unscheduledTasks.length}</span>
+                        <span className="bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400 text-xs px-2 py-1 rounded-full">{unscheduledTasks.length}</span>
                     </h3>
                     {renderTaskGroup(unscheduledTasks)}
                 </section>
 
                 {/* Scheduled Tasks */}
                 <section>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                         Scheduled
-                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">{scheduledTasks.length}</span>
+                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full">{scheduledTasks.length}</span>
                     </h3>
                     {renderTaskGroup(scheduledTasks)}
                 </section>
 
                 {/* Completed Tasks */}
                 <section>
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                         Completed
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">{completedTasks.length}</span>
+                        <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-full">{completedTasks.length}</span>
                     </h3>
                     {renderTaskGroup(completedTasks)}
                 </section>
