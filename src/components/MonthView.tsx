@@ -40,13 +40,13 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
         <div
             ref={setNodeRef}
             className={cn(
-                "min-h-[100px] border-b border-r p-1 flex flex-col",
-                !isCurrentMonth && "bg-gray-50/50 text-gray-400"
+                "min-h-[100px] border-b border-r border-slate-200 dark:border-slate-800 p-1 flex flex-col transition-colors",
+                !isCurrentMonth ? "bg-gray-50/50 dark:bg-slate-900/30 text-gray-400 dark:text-slate-600" : "bg-white dark:bg-slate-900"
             )}
         >
             <div className={cn(
                 "text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ml-auto",
-                isToday ? "bg-blue-600 text-white" : "text-gray-500"
+                isToday ? "bg-blue-600 text-white" : "text-gray-500 dark:text-slate-400"
             )}>
                 {format(date, 'd')}
             </div>
@@ -90,9 +90,9 @@ export function MonthView({ currentDate, tasks, categories = [], events = [], on
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="grid grid-cols-7 border-b">
+            <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="p-2 text-center text-xs font-semibold text-gray-500 uppercase">
+                    <div key={day} className="p-2 text-center text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase">
                         {day}
                     </div>
                 ))}

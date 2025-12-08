@@ -37,10 +37,10 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     const hours = Array.from({ length: 17 }, (_, i) => i + 7); // 7 AM to 11 PM
 
     return (
-        <div ref={setNodeRef} className="flex-1 min-w-[120px] border-r last:border-r-0 relative bg-white">
+        <div ref={setNodeRef} className="flex-1 min-w-[120px] border-r border-slate-200 dark:border-slate-800 last:border-r-0 relative bg-white dark:bg-slate-900">
             {/* Hour grid lines */}
             {hours.map(hour => (
-                <div key={hour} className="h-[60px] border-b border-gray-50 box-border w-full" />
+                <div key={hour} className="h-[60px] border-b border-gray-50 dark:border-slate-800/50 box-border w-full" />
             ))}
 
             {/* Google Events */}
@@ -133,13 +133,13 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
     return (
         <div className="flex h-full overflow-hidden flex-col">
             {/* Header */}
-            <div className="flex border-b bg-white shrink-0 pl-16 scrollbar-gutter-stable">
+            <div className="flex border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shrink-0 pl-16 scrollbar-gutter-stable">
                 {weekDays.map(date => {
                     const isToday = isSameDay(date, new Date());
                     return (
-                        <div key={date.toISOString()} className="flex-1 py-2 text-center border-r last:border-r-0">
-                            <div className="text-xs font-medium text-gray-500 uppercase">{format(date, 'EEE')}</div>
-                            <div className={cn("text-sm font-bold inline-block w-7 h-7 leading-7 rounded-full", isToday ? "bg-blue-600 text-white" : "text-gray-900")}>
+                        <div key={date.toISOString()} className="flex-1 py-2 text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0">
+                            <div className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">{format(date, 'EEE')}</div>
+                            <div className={cn("text-sm font-bold inline-block w-7 h-7 leading-7 rounded-full", isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-slate-100")}>
                                 {format(date, 'd')}
                             </div>
                         </div>
@@ -150,9 +150,9 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
             {/* Scrollable Grid */}
             <div className="flex-1 overflow-y-auto flex relative">
                 {/* Time Axis */}
-                <div className="w-16 flex-shrink-0 bg-white border-r pt-0 sticky left-0 z-20">
+                <div className="w-16 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 pt-0 sticky left-0 z-20">
                     {hours.map(hour => (
-                        <div key={hour} className="h-[60px] text-xs text-gray-400 text-right pr-2 relative -top-2">
+                        <div key={hour} className="h-[60px] text-xs text-gray-400 dark:text-slate-500 text-right pr-2 relative -top-2">
                             {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
                         </div>
                     ))}
