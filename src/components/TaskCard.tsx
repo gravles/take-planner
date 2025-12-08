@@ -38,12 +38,12 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
     };
 
     const cardClasses = cn(
-        'relative group bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-grab active:cursor-grabbing touch-none overflow-hidden',
+        'relative group bg-white dark:bg-slate-800 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all duration-200 cursor-grab active:cursor-grabbing touch-none overflow-hidden',
         isDragging && 'opacity-50 z-50 rotate-2 scale-105 shadow-xl ring-2 ring-blue-500/20',
-        isCompleted ? 'bg-slate-50 opacity-75' : 'bg-white',
+        isCompleted ? 'bg-slate-50 dark:bg-slate-800/50 opacity-75' : 'bg-white dark:bg-slate-800',
         isCompact
-            ? 'rounded-lg px-2 py-1 h-full flex items-center gap-2 text-xs border border-transparent hover:border-slate-200'
-            : 'rounded-xl p-3.5 h-full flex flex-col border border-slate-100'
+            ? 'rounded-lg px-2 py-1 h-full flex items-center gap-2 text-xs border border-transparent hover:border-slate-200 dark:hover:border-slate-700'
+            : 'rounded-xl p-3.5 h-full flex flex-col border border-slate-100 dark:border-slate-700'
     );
 
     const formattedTime = task.scheduled_at
@@ -130,7 +130,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
             style={style}
             {...listeners}
             {...attributes}
-            className={cn(cardClasses, "cursor-pointer hover:ring-1 hover:ring-slate-200")}
+            className={cn(cardClasses, "cursor-pointer hover:ring-1 hover:ring-slate-200 dark:hover:ring-slate-700")}
             onClick={() => onEdit && onEdit(task)}
         >
             <div className="flex justify-between items-start mb-1.5 gap-2">
@@ -146,7 +146,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                 "mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0",
                                 isCompleted
                                     ? "bg-green-500 border-green-500 text-white"
-                                    : "border-slate-300 hover:border-green-500 text-transparent hover:text-green-500 bg-white"
+                                    : "border-slate-300 dark:border-slate-600 hover:border-green-500 text-transparent hover:text-green-500 bg-white dark:bg-slate-800"
                             )}
                         >
                             <CheckCircle className="w-3.5 h-3.5 fill-current" />
@@ -154,8 +154,8 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     )}
                     <div className="flex flex-col min-w-0">
                         <h3 className={cn(
-                            "font-semibold text-[13px] leading-snug text-slate-800 break-words",
-                            isCompleted && "line-through text-slate-400"
+                            "font-semibold text-[13px] leading-snug text-slate-800 dark:text-slate-200 break-words",
+                            isCompleted && "line-through text-slate-400 dark:text-slate-500"
                         )}>
                             {task.title}
                         </h3>
@@ -165,7 +165,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                             {/* Category Badge */}
                             {task.category && !isCompleted && (
                                 <span
-                                    className="text-[10px] px-2 py-0.5 rounded-full font-medium ring-1 ring-inset ring-black/5"
+                                    className="text-[10px] px-2 py-0.5 rounded-full font-medium ring-1 ring-inset ring-black/5 dark:ring-white/10"
                                     style={{ backgroundColor: `${task.category.color}15`, color: task.category.color }}
                                 >
                                     {task.category.name}
@@ -176,7 +176,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                             {!isCompleted && task.priority !== 'low' && (
                                 <span className={cn(
                                     "text-[10px] px-1.5 py-0.5 rounded-full font-medium flex items-center gap-1",
-                                    task.priority === 'high' ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
+                                    task.priority === 'high' ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400" : "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400"
                                 )}>
                                     <div className={cn("w-1 h-1 rounded-full", task.priority === 'high' ? "bg-rose-500" : "bg-amber-500")} />
                                     {task.priority === 'high' ? 'High' : 'Medium'}
@@ -185,7 +185,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
 
                             {/* Reminder Indicator */}
                             {task.reminder_at && !isCompleted && (
-                                <span className="text-slate-400" title={`Reminder: ${format(new Date(task.reminder_at), 'h:mm a')}`}>
+                                <span className="text-slate-400 dark:text-slate-500" title={`Reminder: ${format(new Date(task.reminder_at), 'h:mm a')}`}>
                                     <Bell className="w-3 h-3" />
                                 </span>
                             )}
@@ -193,8 +193,8 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                             {/* Notes Indicator */}
                             {task.description && !isCompleted && (
                                 <div className="group/note relative">
-                                    <FileText className="w-3 h-3 text-slate-400" />
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-48 p-2 bg-slate-800 text-white text-[10px] rounded shadow-lg opacity-0 group-hover/note:opacity-100 transition-opacity pointer-events-none z-50">
+                                    <FileText className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-48 p-2 bg-slate-800 dark:bg-slate-900 text-white text-[10px] rounded shadow-lg opacity-0 group-hover/note:opacity-100 transition-opacity pointer-events-none z-50">
                                         <p className="line-clamp-3">{task.description}</p>
                                     </div>
                                 </div>
@@ -203,7 +203,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
 
                         {/* Completion Timestamp */}
                         {isCompleted && completedTime && (
-                            <span className="text-[10px] text-slate-400 font-medium mt-1">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">
                                 Completed {completedTime}
                             </span>
                         )}
@@ -213,14 +213,14 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
 
             {/* Scheduled Time Display */}
             {task.scheduled_at && !isCompleted && (
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mb-2 font-medium bg-slate-50 self-start px-2 py-1 rounded-md">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 mb-2 font-medium bg-slate-50 dark:bg-slate-700/50 self-start px-2 py-1 rounded-md">
                     <CalendarIcon className="w-3 h-3" />
                     <span>{format(new Date(task.scheduled_at), 'MMM d • h:mm a')}</span>
                 </div>
             )}
 
-            <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-50">
-                <div className="flex items-center text-xs text-slate-500 gap-2">
+            <div className="mt-auto pt-2 flex items-center justify-between border-t border-slate-50 dark:border-slate-700/50">
+                <div className="flex items-center text-xs text-slate-500 dark:text-slate-400 gap-2">
                     <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>{task.duration_minutes}m</span>
@@ -228,7 +228,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                 </div>
 
                 {/* Action Buttons - Floating Pill on Hover */}
-                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white shadow-sm border border-slate-100 rounded-lg p-0.5">
+                <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 rounded-lg p-0.5">
                     {onUnschedule && task.scheduled_at && !isCompleted && (
                         <button
                             onPointerDown={(e) => e.stopPropagation()}
@@ -236,7 +236,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                 e.stopPropagation();
                                 onUnschedule(task);
                             }}
-                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-amber-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
                             title="Unschedule"
                         >
                             <MinusCircle className="w-3.5 h-3.5" />
@@ -249,7 +249,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                 e.stopPropagation();
                                 onEdit(task);
                             }}
-                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="Edit"
                         >
                             <Pencil className="w-3.5 h-3.5" />
@@ -262,7 +262,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                 e.stopPropagation();
                                 onDelete(task);
                             }}
-                            className="p-1.5 hover:bg-slate-50 rounded-md text-slate-400 hover:text-rose-600 transition-colors"
+                            className="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
                             title="Delete"
                         >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -275,7 +275,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                                 e.stopPropagation();
                                 onFocus(task);
                             }}
-                            className="p-1.5 hover:bg-blue-50 rounded-md text-slate-400 hover:text-blue-600 transition-colors"
+                            className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="Start Focus"
                         >
                             <Play className="w-3.5 h-3.5 fill-current" />

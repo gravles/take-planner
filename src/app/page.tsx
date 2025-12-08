@@ -8,7 +8,8 @@ import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { useMicrosoftToDo } from '@/hooks/useMicrosoftToDo';
 import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { useTheme } from "next-themes"
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import Link from 'next/link';
@@ -42,6 +43,7 @@ export default function Home() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -425,11 +427,18 @@ export default function Home() {
             </div>
             <button
               onClick={handleCreateTask}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs md:text-sm font-medium whitespace-nowrap shrink-0 shadow-md shadow-slate-900/10"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-200 hover:shadow-lg hover:-translate-y-0.5 transition-all text-xs md:text-sm font-medium whitespace-nowrap shrink-0 shadow-md shadow-slate-900/10"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">New Task</span>
               <span className="sm:hidden">New</span>
+            </button>
+
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
 
             <div className="relative ml-2">

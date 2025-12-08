@@ -73,8 +73,8 @@ function CategoryZone({
             style={style}
             className={cn(
                 "rounded-xl transition-all duration-200 border border-transparent",
-                isDragging ? "opacity-50 z-50 bg-slate-100 shadow-lg scale-105" : "",
-                isOver ? "bg-blue-50/50 ring-2 ring-blue-200 border-blue-200" : "bg-slate-50/50 hover:bg-slate-50"
+                isDragging ? "opacity-50 z-50 bg-slate-100 dark:bg-slate-800 shadow-lg scale-105" : "",
+                isOver ? "bg-blue-50/50 dark:bg-blue-900/20 ring-2 ring-blue-200 dark:ring-blue-800 border-blue-200 dark:border-blue-800" : "bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800"
             )}
         >
             <div className="flex items-center gap-2 p-2 group select-none">
@@ -82,7 +82,7 @@ function CategoryZone({
                     <button
                         {...attributes}
                         {...listeners}
-                        className="p-1 text-slate-400 hover:text-slate-600 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                         <GripVertical className="w-4 h-4" />
                     </button>
@@ -90,15 +90,15 @@ function CategoryZone({
 
                 <button
                     onClick={() => setIsExpanded(!isExpanded)}
-                    className="p-1 hover:bg-slate-200 rounded-md text-slate-500 transition-colors"
+                    className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400 transition-colors"
                 >
                     {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </button>
 
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {color && <div className="w-2.5 h-2.5 rounded-full ring-1 ring-black/5" style={{ backgroundColor: color }} />}
-                    <h3 className="text-sm font-semibold text-slate-700 truncate">{title}</h3>
-                    <span className="text-xs text-slate-400 font-medium bg-slate-200/50 px-1.5 py-0.5 rounded-full">
+                    {color && <div className="w-2.5 h-2.5 rounded-full ring-1 ring-black/5 dark:ring-white/10" style={{ backgroundColor: color }} />}
+                    <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">{title}</h3>
+                    <span className="text-xs text-slate-400 font-medium bg-slate-200/50 dark:bg-slate-700/50 px-1.5 py-0.5 rounded-full">
                         {tasks.length}
                     </span>
                 </div>
@@ -132,13 +132,13 @@ export function TaskBench({ tasks, categories, onFocus, onEdit, onToggleComplete
     const uncategorizedTasks = tasks.filter(t => !t.category_id);
 
     return (
-        <div className="w-80 md:w-80 bg-white border-r border-slate-200 flex flex-col h-full shadow-xl shadow-slate-200/50 z-20">
-            <div className="p-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-                <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2 tracking-tight">
+        <div className="w-80 md:w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-full shadow-xl shadow-slate-200/50 dark:shadow-black/20 z-20">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+                <h2 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2 tracking-tight">
                     Task Bench
-                    <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-full font-medium">{tasks.length}</span>
+                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs px-2 py-1 rounded-full font-medium">{tasks.length}</span>
                 </h2>
-                <p className="text-xs text-slate-500 mt-1 font-medium">Drag tasks to categories</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Drag tasks to categories</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
