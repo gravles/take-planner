@@ -352,8 +352,8 @@ export default function Home() {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col h-screen relative w-full bg-slate-50/50">
-          <header className="h-16 border-b border-slate-200/60 flex items-center justify-between px-4 md:px-6 bg-white/80 backdrop-blur-md sticky top-0 z-30 shrink-0 gap-2">
+        <div className="flex-1 flex flex-col h-screen relative w-full bg-slate-50/50 dark:bg-slate-950/50">
+          <header className="h-16 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between px-4 md:px-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-30 shrink-0 gap-2">
             <div className="flex items-center gap-2 md:gap-4">
               {/* Mobile Bench Toggle */}
               {viewMode !== 'list' && (
@@ -396,29 +396,29 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="flex items-center gap-1 bg-slate-100/80 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar border border-slate-200/50">
+              <div className="flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar border border-slate-200/50 dark:border-slate-700/50">
                 <button
                   onClick={() => setViewMode('day')}
-                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'day' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'day' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}
                 >
                   Day
                 </button>
                 <button
                   onClick={() => setViewMode('week')}
-                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'week' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'week' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}
                 >
                   Week
                 </button>
                 <button
                   onClick={() => setViewMode('month')}
-                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'month' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                  className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'month' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}
                 >
                   Month
                 </button>
-                <div className="w-px h-4 bg-slate-300 mx-1 hidden sm:block" />
+                <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1 hidden sm:block" />
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-900 ring-1 ring-black/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'}`}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}
                   title="List View"
                 >
                   <LayoutList className="w-4 h-4" />

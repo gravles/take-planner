@@ -109,13 +109,13 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
 
                 {/* Time (if requested) */}
                 {showTime && formattedTime && !isCompleted && (
-                    <span className="text-slate-500 font-medium shrink-0 tracking-tight">{formattedTime}</span>
+                    <span className="text-slate-500 dark:text-slate-300 font-medium shrink-0 tracking-tight">{formattedTime}</span>
                 )}
 
                 {/* Title */}
                 <span className={cn(
-                    "truncate font-medium flex-1 text-slate-700",
-                    isCompleted && "line-through text-slate-400"
+                    "truncate font-medium flex-1 text-slate-700 dark:text-slate-200",
+                    isCompleted && "line-through text-slate-400 dark:text-slate-500"
                 )}>
                     {task.title}
                 </span>
@@ -154,7 +154,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     )}
                     <div className="flex flex-col min-w-0">
                         <h3 className={cn(
-                            "font-semibold text-[13px] leading-snug text-slate-800 dark:text-slate-200 break-words",
+                            "font-semibold text-[13px] leading-snug text-slate-800 dark:text-slate-100 break-words",
                             isCompleted && "line-through text-slate-400 dark:text-slate-500"
                         )}>
                             {task.title}
