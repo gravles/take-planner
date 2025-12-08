@@ -8,7 +8,7 @@ import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { useMicrosoftToDo } from '@/hooks/useMicrosoftToDo';
 import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings, Sun, Moon, BarChart2 } from 'lucide-react';
 import { useTheme } from "next-themes"
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -433,6 +433,14 @@ export default function Home() {
               <span className="hidden sm:inline">New Task</span>
               <span className="sm:hidden">New</span>
             </button>
+
+            <Link
+              href="/analytics"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+              title="Analytics"
+            >
+              <BarChart2 className="w-5 h-5" />
+            </Link>
 
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
