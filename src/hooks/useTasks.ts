@@ -138,9 +138,11 @@ export function useTasks() {
 
     async function updateTask(id: string, updates: Partial<Task>) {
         try {
-            // Handle Microsoft To Do updates
             const task = tasks.find(t => t.id === id);
-            if (task?.source === 'microsoft_todo' && task.external_id && msToken) {
+            if (!task) return false;
+
+            // Handle Microsoft To Do updates
+            if (task.source === 'microsoft_todo' && task.external_id && msToken) {
                 // Map updates to MS Graph fields
                 const msUpdates: any = {};
                 if (updates.title) msUpdates.title = updates.title;
@@ -162,18 +164,6 @@ export function useTasks() {
                 }
 
                 if (Object.keys(msUpdates).length > 0) {
-                    // We need the list ID to update? No, /tasks/{id} works globally usually, 
-                    // BUT for MS To Do it's safer to use /me/todo/lists/tasks/tasks/{id} if it's in default,
-                    // or /me/todo/lists/{listId}/tasks/{taskId}.
-                    // However, the ID is unique. Let's try the generic endpoint or find the list.
-                    // Actually, we don't store the list ID on the task in Supabase (only category_id).
-                    // We can try updating via the generic /tasks endpoint if it exists, but MS Graph To Do API is list-centric.
-                    // Wait, `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/{id}` might only work for default list.
-
-                    // Actually, we can use the top-level /me/todo/lists to find it? No.
-                    // Correct way: We need to know the list ID.
-                    // We can get it from the category.
-
                     let url = `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/${task.external_id}`; // Default fallback
 
                     if (task.category_id) {
@@ -197,6 +187,42 @@ export function useTasks() {
                         body: JSON.stringify(msUpdates)
                     });
                 }
+            }
+
+            // Handle Recurrence: Create next task if completing a recurring task
+            if (updates.status === 'completed' && task.recurrence && task.status !== 'completed') {
+                const nextDate = new Date(task.scheduled_at || new Date());
+
+                switch (task.recurrence) {
+                    case 'daily':
+                        nextDate.setDate(nextDate.getDate() + 1);
+                        break;
+                    case 'weekly':
+                        nextDate.setDate(nextDate.getDate() + 7);
+                        break;
+                    case 'monthly':
+                        nextDate.setMonth(nextDate.getMonth() + 1);
+                        break;
+                    case 'yearly':
+                        nextDate.setFullYear(nextDate.getFullYear() + 1);
+                        break;
+                }
+
+                // Create the new task
+                await addTask({
+                    title: task.title,
+                    description: task.description,
+                    duration_minutes: task.duration_minutes,
+                    priority: task.priority,
+                    status: 'todo',
+                    scheduled_at: nextDate.toISOString(),
+                    recurrence: task.recurrence, // Propagate recurrence
+                    category_id: task.category_id,
+                    source: task.source, // Keep source? If MS To Do, it might duplicate there too if we aren't careful.
+                    // For MS To Do, they handle recurrence natively usually. 
+                    // If we create a new task here for MS To Do source, it will create a NEW separate task in MS To Do.
+                    // This is probably desired if we are managing recurrence ourselves.
+                });
             }
 
             const { error } = await supabase

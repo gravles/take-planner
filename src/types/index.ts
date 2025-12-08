@@ -22,6 +22,7 @@ export interface Task {
     user_id: string;
     completed_at?: string | null;
     reminder_at?: string | null;
+    recurrence?: 'daily' | 'weekly' | 'monthly' | 'yearly' | null;
     category_id?: string | null;
     category?: Category; // Joined category data
     source?: 'supabase' | 'microsoft_todo';

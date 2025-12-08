@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Task, TaskPriority, Category } from '@/types';
-import { X, Calendar, Clock, Tag, Settings } from 'lucide-react';
+import { X, Calendar, Clock, Tag, Settings, Repeat } from 'lucide-react';
 import { format } from 'date-fns';
 import { useCategories } from '@/hooks/useCategories';
 import { CategoryManager } from './CategoryManager';
@@ -20,6 +20,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
     const [scheduledDate, setScheduledDate] = useState('');
     const [scheduledTime, setScheduledTime] = useState('');
     const [categoryId, setCategoryId] = useState<string>('');
+    const [recurrence, setRecurrence] = useState<'daily' | 'weekly' | 'monthly' | 'yearly' | ''>('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
@@ -32,6 +33,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
             setDuration(initialTask.duration_minutes);
             setPriority(initialTask.priority);
             setCategoryId(initialTask.category_id || '');
+            setRecurrence(initialTask.recurrence || '');
 
             if (initialTask.scheduled_at) {
                 const date = new Date(initialTask.scheduled_at);
@@ -50,6 +52,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
             setScheduledDate('');
             setScheduledTime('');
             setCategoryId('');
+            setRecurrence('');
         }
     }, [isOpen, initialTask]);
 
@@ -75,6 +78,7 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                 status: initialTask?.status || 'todo',
                 scheduled_at,
                 category_id: categoryId || null,
+                recurrence: recurrence || null,
             });
             onClose();
         } catch (error) {
@@ -201,11 +205,33 @@ export function CreateTaskModal({ isOpen, onClose, onSave, initialTask }: Create
                                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none"
                                 />
                             </div>
+
+                            {/* Recurrence Dropdown */}
+                            {scheduledDate && (
+                                <div className="mt-3">
+                                    <label className="block text-xs font-medium text-gray-500 mb-1">Repeat</label>
+                                    <div className="relative">
+                                        <Repeat className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                                        <select
+                                            value={recurrence}
+                                            onChange={(e) => setRecurrence(e.target.value as any)}
+                                            className="w-full pl-9 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none appearance-none bg-white text-sm"
+                                        >
+                                            <option value="">Does not repeat</option>
+                                            <option value="daily">Daily</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="monthly">Monthly</option>
+                                            <option value="yearly">Yearly</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
                             {scheduledDate && (
                                 <button
                                     type="button"
-                                    onClick={() => { setScheduledDate(''); setScheduledTime(''); }}
-                                    className="text-xs text-red-500 hover:text-red-700 mt-1"
+                                    onClick={() => { setScheduledDate(''); setScheduledTime(''); setRecurrence(''); }}
+                                    className="text-xs text-red-500 hover:text-red-700 mt-2"
                                 >
                                     Clear Schedule (Move to Bench)
                                 </button>
