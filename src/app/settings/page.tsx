@@ -6,8 +6,6 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-
-
 import { useIntegrationToken } from '@/hooks/useIntegrationToken';
 import { ProfileSettings } from '@/components/ProfileSettings';
 
@@ -17,9 +15,6 @@ export default function SettingsPage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
 
-    // Initialize hooks to capture and save tokens after redirect
-    // This is CRITICAL: The hooks check the URL for ?connected_provider=... and save the session token to the DB.
-    // Without this, the token is lost after the OAuth redirect.
     // Initialize hooks to capture and save tokens after redirect
     const { tokens: googleTokens } = useIntegrationToken('google');
     const { tokens: azureTokens } = useIntegrationToken('azure');
@@ -51,5 +46,188 @@ export default function SettingsPage() {
                 setConnectedProviders(dbProviders);
             }
         } catch (error) {
-    );
+            console.error('Error loading integrations:', error);
+        } finally {
+            setLoading(false);
         }
+    }
+
+    async function handleDisconnect(provider: 'google' | 'azure', email?: string) {
+        try {
+            setLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            // Delete from user_integrations
+            let query = supabase
+                .from('user_integrations')
+                .delete()
+                .eq('user_id', session.user.id)
+                .eq('provider', provider);
+
+            if (email) {
+                query = query.eq('account_email', email);
+            }
+
+            const { error } = await query;
+
+            if (error) throw error;
+
+            // Update local state
+            setConnectedProviders(prev => prev.filter(p => p !== provider));
+            setMessage({ type: 'success', text: `Disconnected ${provider === 'google' ? 'Google' : 'Microsoft'} account.` });
+
+            // Refresh page for clean state
+            window.location.reload();
+
+        } catch (error: any) {
+            console.error('Error disconnecting:', error);
+            setMessage({ type: 'error', text: 'Error disconnecting: ' + error.message });
+            setLoading(false);
+        }
+    }
+
+    async function handleConnect(provider: 'google' | 'azure') {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (session) {
+                const { data, error } = await supabase.auth.linkIdentity({
+                    provider: provider,
+                    options: {
+                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    }
+                });
+                if (error) throw error;
+            } else {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: provider,
+                    options: {
+                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    }
+                });
+                if (error) throw error;
+            }
+        } catch (error: any) {
+            console.error('Error connecting account:', error);
+            setMessage({ type: 'error', text: 'Error connecting account: ' + error.message });
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+            <div className="max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-4 mb-8">
+                    <Link href="/" className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                    </Link>
+                    <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+                </div>
+
+                {/* Profile Section */}
+                <ProfileSettings />
+
+                {/* Integrations Section */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-6 border-b border-gray-100">
+                        <h2 className="text-lg font-semibold text-gray-900">Integrations</h2>
+                        <p className="text-sm text-gray-500 mt-1">Manage your connected accounts</p>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                        {/* Google Calendar */}
+                        <div className="flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                                        <span className="text-xl">📅</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium text-gray-900">Google Calendar</h3>
+                                        <p className="text-xs text-gray-500">Sync your events</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleConnect('google')}
+                                    className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                                >
+                                    {googleTokens.length > 0 ? 'Connect Another Account' : 'Connect'}
+                                </button>
+                            </div>
+
+                            {/* Connected Accounts List */}
+                            {googleTokens.length > 0 && (
+                                <div className="space-y-2 mt-2">
+                                    {googleTokens.map((t, idx) => (
+                                        <div key={idx} className="flex items-center justify-between pl-14 pr-2 bg-slate-50 rounded-md py-1 border border-slate-100">
+                                            <span className="text-xs text-slate-700 font-mono">
+                                                {t.account_email}
+                                            </span>
+                                            <button
+                                                onClick={() => handleDisconnect('google', t.account_email)}
+                                                className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded"
+                                            >
+                                                Disconnect
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Microsoft To Do */}
+                        <div className="flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                                        <span className="text-xl">✅</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium text-gray-900">Microsoft To Do</h3>
+                                        <p className="text-xs text-gray-500">Sync your tasks</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => handleConnect('azure')}
+                                    className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                                >
+                                    {azureTokens.length > 0 ? 'Connect Another Account' : 'Connect'}
+                                </button>
+                            </div>
+
+                            {/* Connected Accounts List */}
+                            {azureTokens.length > 0 && (
+                                <div className="space-y-2 mt-2">
+                                    {azureTokens.map((t, idx) => (
+                                        <div key={idx} className="flex items-center justify-between pl-14 pr-2 bg-slate-50 rounded-md py-1 border border-slate-100">
+                                            <span className="text-xs text-slate-700 font-mono">
+                                                {t.account_email}
+                                            </span>
+                                            <button
+                                                onClick={() => handleDisconnect('azure', t.account_email)}
+                                                className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded"
+                                            >
+                                                Disconnect
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
