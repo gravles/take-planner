@@ -10,8 +10,8 @@ import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings, Sun, Moon, BarChart2 } from 'lucide-react';
 import { useTheme } from "next-themes"
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, closestCorners } from '@dnd-kit/core';
+import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import Link from 'next/link';
 import { MobileNav } from '@/components/MobileNav';
 import { Auth } from '@/components/Auth';
@@ -105,13 +105,30 @@ export default function Home() {
     await updateTask(task.id, updates);
   };
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
       },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  if (!mounted) return null;
 
   // Separate tasks into bench (unscheduled) and calendar (scheduled)
   const benchTasks = tasks.filter(t => !t.scheduled_at);
