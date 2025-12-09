@@ -387,7 +387,12 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
             </div>
 
             {/* All Day Row */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 shrink-0 pl-16 bg-white dark:bg-slate-900 relative z-30 shadow-sm">
+            <div className="flex border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 relative z-30 shadow-sm">
+                <div className="w-16 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 start-0 z-40">
+                    <div className="h-full flex items-center justify-center text-[10px] text-slate-400 font-medium uppercase tracking-wider rotate-[-90deg]">
+                        All Day
+                    </div>
+                </div>
                 {weekDays.map(date => {
                     // Filter All Day Items
                     const dayAllDayEvents = events.filter(e => {

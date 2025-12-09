@@ -397,7 +397,17 @@ export default function Home() {
                     Today
                   </button>
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      if (viewMode === 'week') {
+                        newDate.setDate(newDate.getDate() - 7);
+                      } else if (viewMode === 'month') {
+                        newDate.setMonth(newDate.getMonth() - 1);
+                      } else {
+                        newDate.setDate(newDate.getDate() - 1);
+                      }
+                      setCurrentDate(newDate);
+                    }}
                     className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -406,7 +416,17 @@ export default function Home() {
                   <DatePicker currentDate={currentDate} onDateChange={setCurrentDate} />
 
                   <button
-                    onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      if (viewMode === 'week') {
+                        newDate.setDate(newDate.getDate() + 7);
+                      } else if (viewMode === 'month') {
+                        newDate.setMonth(newDate.getMonth() + 1);
+                      } else {
+                        newDate.setDate(newDate.getDate() + 1);
+                      }
+                      setCurrentDate(newDate);
+                    }}
                     className="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -519,7 +539,17 @@ export default function Home() {
             {viewMode !== 'list' && (
               <div className="flex items-center justify-between bg-slate-100/50 dark:bg-slate-800/50 rounded-lg p-1">
                 <button
-                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
+                  onClick={() => {
+                    const newDate = new Date(currentDate);
+                    if (viewMode === 'week') {
+                      newDate.setDate(newDate.getDate() - 7);
+                    } else if (viewMode === 'month') {
+                      newDate.setMonth(newDate.getMonth() - 1);
+                    } else {
+                      newDate.setDate(newDate.getDate() - 1);
+                    }
+                    setCurrentDate(newDate);
+                  }}
                   className="p-1.5 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -530,7 +560,17 @@ export default function Home() {
                 </div>
 
                 <button
-                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
+                  onClick={() => {
+                    const newDate = new Date(currentDate);
+                    if (viewMode === 'week') {
+                      newDate.setDate(newDate.getDate() + 7);
+                    } else if (viewMode === 'month') {
+                      newDate.setMonth(newDate.getMonth() + 1);
+                    } else {
+                      newDate.setDate(newDate.getDate() + 1);
+                    }
+                    setCurrentDate(newDate);
+                  }}
                   className="p-1.5 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -545,8 +585,8 @@ export default function Home() {
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all capitalize ${viewMode === mode
-                      ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                     }`}
                 >
                   {mode}
