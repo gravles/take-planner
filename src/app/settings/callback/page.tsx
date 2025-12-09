@@ -13,9 +13,55 @@ function CallbackContent() {
     useEffect(() => {
         const handleCallback = async () => {
             try {
+                // Check for Errors first
+                const error = searchParams.get('error');
+                const errorCode = searchParams.get('error_code');
+                const errorDescription = searchParams.get('error_description');
+                const provider = searchParams.get('provider') || 'azure';
+
+                if (errorCode === 'identity_already_exists') {
+                    console.warn('[AuthCallback] Identity already linked.');
+                    setStatus('Resolving connection conflict...');
+
+                    // HEALING LOGIC: Unlink and Retry
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.user?.identities) {
+                        const existingIdentity = session.user.identities.find(
+                            id => id.provider === provider
+                        );
+
+                        if (existingIdentity) {
+                            console.log('[AuthCallback] Found stale identity. Unlinking:', existingIdentity.id);
+                            const { error: unlinkError } = await supabase.auth.unlinkIdentity(existingIdentity);
+
+                            if (!unlinkError) {
+                                setStatus('Conflict resolved. Retrying connection...');
+                                // Redirect back to settings to auto-trigger connect? 
+                                // Or better, just redirect to settings and let user click again to avoid infinite loops if it fails again.
+                                // OR: Manually trigger the auth flow again here?
+                                // Let's simplify: Send back to settings with a message?
+                                // Actually, we can just force a new auth flow URL here.
+                                // But `handleConnect` in SettingsPage is what generates the URL.
+                                // Let's push back to settings with a special param to auto-retry or just invalidating the stale state.
+                                setTimeout(() => {
+                                    window.location.href = `/settings?retry_provider=${provider}`;
+                                }, 1500);
+                                return;
+                            } else {
+                                console.error('Unlink failed:', unlinkError);
+                                setStatus('Error: Could not resolve account conflict.');
+                            }
+
+                        } else {
+                            // Identity exists but NOT on this user? Then it's on another user.
+                            setStatus('Error: This account is already connected to a DIFFERENT user.');
+                        }
+                    }
+                    return; // Stop processing
+                }
+
                 // 1. Check for PKCE Code (Server-side flow)
                 const code = searchParams.get('code');
-                const provider = searchParams.get('provider') || 'azure';
 
                 let finalToken: string | null = null;
                 let finalRefreshToken: string | null = null;
@@ -97,7 +143,7 @@ function CallbackContent() {
         };
 
         handleCallback();
-    }, [searchParams]); // Add searchParams dependency for code check
+    }, [searchParams]);
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null): Promise<boolean> => {
         try {
