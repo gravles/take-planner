@@ -84,36 +84,6 @@ export default function SettingsPage() {
             console.error('Error disconnecting:', error);
             setMessage({ type: 'error', text: 'Error disconnecting: ' + error.message });
             setLoading(false);
-        }
-    }
-
-    async function handleConnect(provider: 'google' | 'azure') {
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (session) {
-                const { data, error } = await supabase.auth.linkIdentity({
-                    provider: provider,
-                    options: {
-                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
-                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
-                        queryParams: provider === 'google' ? { prompt: 'consent select_account' } : undefined
-                    }
-                });
-                if (error) throw error;
-            } else {
-                const { data, error } = await supabase.auth.signInWithOAuth({
-                    provider: provider,
-                    options: {
-                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
-                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
-                        queryParams: provider === 'google' ? { prompt: 'consent select_account' } : undefined
-                    }
-                });
-                if (error) throw error;
-            }
-        } catch (error: any) {
-            console.error('Error connecting account:', error);
             setMessage({ type: 'error', text: 'Error connecting account: ' + error.message });
         }
     }
