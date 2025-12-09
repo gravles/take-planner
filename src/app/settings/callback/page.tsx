@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Loader2 } from 'lucide-react';
 
-export default function AuthCallbackPage() {
+function CallbackContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState('Verifying connection...');
@@ -27,8 +27,6 @@ export default function AuthCallbackPage() {
 
                 if (!providerToken) {
                     console.warn('[AuthCallback] No provider_token found in hash. Session might be used directly if available.');
-                    // If no hash, maybe we are already handled by supabase?
-                    // We check session just in case, but usually this means failure if we expected a new link.
                 }
 
                 const { data: { session } } = await supabase.auth.getSession();
@@ -45,8 +43,6 @@ export default function AuthCallbackPage() {
                     setStatus('Error: No active session. Please log in first.');
                     setTimeout(() => router.push('/login'), 3000);
                 } else {
-                    // Check if session.provider_token is valid?
-                    // If we missed the hash, we might be stuck.
                     setStatus('Finishing setup...');
                     setTimeout(() => router.push('/settings'), 1500);
                 }
@@ -112,5 +108,17 @@ export default function AuthCallbackPage() {
             <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-4" />
             <h2 className="text-lg font-medium text-gray-900">{status}</h2>
         </div>
+    );
+}
+
+export default function AuthCallbackPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+        }>
+            <CallbackContent />
+        </Suspense>
     );
 }
