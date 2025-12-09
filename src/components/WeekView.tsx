@@ -65,11 +65,16 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
                         }}
                     >
                         <div
-                            className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 shadow-sm flex flex-col"
+                            className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 shadow-sm flex flex-col cursor-pointer"
                             style={{
                                 backgroundColor: `${event.displayColor}20`,
                                 borderColor: event.displayColor,
+                                borderColor: event.displayColor,
                                 color: '#1e293b'
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(event);
                             }}
                         >
                             <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
@@ -132,13 +137,18 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     );
 }
 
+import { EventDetailsModal } from './EventDetailsModal';
+import { useState } from 'react';
+
 export function WeekView({ currentDate, tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: WeekViewProps) {
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
+    const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
 
     return (
         <div className="flex h-full overflow-hidden flex-col">
+            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
             {/* Header */}
             <div className="flex border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shrink-0 pl-16 scrollbar-gutter-stable">
                 {weekDays.map(date => {

@@ -17,7 +17,7 @@ interface MonthViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick }: {
     date: Date;
     tasks: Task[];
     categories?: Category[];
@@ -28,6 +28,7 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
+    onEventClick: (event: GoogleEvent) => void;
 }) {
     const { setNodeRef } = useDroppable({
         id: `day-${format(date, 'yyyy-MM-dd')}`,
@@ -55,11 +56,15 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
                 {events.map(event => (
                     <div key={event.id} className="min-h-0 shrink-0">
                         <div
-                            className="border-l-2 rounded px-1 py-0.5 text-[10px] truncate font-medium"
+                            className="border-l-2 rounded px-1 py-0.5 text-[10px] truncate font-medium cursor-pointer"
                             style={{
                                 backgroundColor: `${event.displayColor}20`,
                                 borderColor: event.displayColor,
                                 color: '#1e293b'
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEventClick(event);
                             }}
                         >
                             {event.summary}
@@ -87,16 +92,21 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
     );
 }
 
+import { EventDetailsModal } from './EventDetailsModal';
+import { useState } from 'react';
+
 export function MonthView({ currentDate, tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: MonthViewProps) {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
     const calendarStart = startOfWeek(monthStart);
     const calendarEnd = endOfWeek(monthEnd);
+    const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
 
     const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
+            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
             <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                     <div key={day} className="p-2 text-center text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase">
@@ -128,6 +138,7 @@ export function MonthView({ currentDate, tasks, categories = [], events = [], on
                             onToggleComplete={onToggleComplete}
                             onUnschedule={onUnschedule}
                             onDelete={onDelete}
+                            onEventClick={(e) => setSelectedEvent(e)}
                         />
                     );
                 })}
