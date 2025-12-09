@@ -43,12 +43,17 @@ function CalendarSlot({ hour, children }: { hour: number; children?: React.React
     );
 }
 
+import { EventDetailsModal } from './EventDetailsModal';
+import { useState } from 'react';
+
 export function CalendarView({ tasks, categories = [], events = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: CalendarViewProps) {
     // Generate time slots from 7 AM to 11 PM
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
+    const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
 
     return (
         <div className="flex-1 h-screen overflow-y-auto bg-white/50 dark:bg-slate-950/50 p-6">
+            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
             <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-100 tracking-tight">Today's Schedule</h2>
 
             <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm min-h-[800px] overflow-hidden">
@@ -158,11 +163,15 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                                             }}
                                         >
                                             <div
-                                                className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm flex flex-col transition-opacity"
+                                                className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm flex flex-col transition-opacity cursor-pointer"
                                                 style={{
                                                     backgroundColor: `${event.displayColor}20`, // 20 = ~12% opacity
                                                     borderColor: event.displayColor,
                                                     color: '#1e293b' // slate-800
+                                                }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedEvent(event);
                                                 }}
                                             >
                                                 <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
