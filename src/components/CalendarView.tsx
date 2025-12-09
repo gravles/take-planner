@@ -56,18 +56,43 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
             <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
             <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-100 tracking-tight">Today's Schedule</h2>
 
-            <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm min-h-[800px] overflow-hidden">
-                {/* All Day / Due Today Slot */}
-                <CalendarSlot hour={0}>
-                    <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-slate-400 pointer-events-none bg-slate-50/50">
-                        All Day / Due Today
-                    </div>
+            {/* All Day Section */}
+            <div className="mb-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-sm">
+                <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                    All Day
+                </div>
+                <div className="flex flex-col gap-1.5">
+                    {/* Google All Day Events */}
+                    {events.filter(e => e.start.date && !e.start.dateTime).map(event => (
+                        <div
+                            key={`${event.id}-allday`}
+                            className="p-2 text-xs rounded border border-l-4 cursor-pointer hover:opacity-90 transition-opacity"
+                            style={{
+                                backgroundColor: `${event.displayColor}15`,
+                                borderColor: event.displayColor, // Border-l-color inherits naturally if not set, but we want specific color for box? No, just using border-l-4 style trick
+                                borderLeftColor: event.displayColor, // Explicitly set left border color
+                                borderRightColor: `${event.displayColor}30`,
+                                borderTopColor: `${event.displayColor}30`,
+                                borderBottomColor: `${event.displayColor}30`,
+                                color: '#1e293b'
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(event);
+                            }}
+                        >
+                            <div className="font-semibold text-slate-700 dark:text-slate-200">{event.summary}</div>
+                        </div>
+                    ))}
+
+                    {/* All Day Tasks */}
                     {tasks.filter(t => {
                         if (!t.scheduled_at) return false;
                         const date = new Date(t.scheduled_at);
                         return date.getHours() === 0 && date.getMinutes() === 0;
                     }).map(task => (
-                        <div key={task.id} className="relative z-10 mb-1">
+                        <div key={task.id}>
                             <TaskCard
                                 task={task}
                                 categories={categories}
@@ -80,8 +105,16 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                             />
                         </div>
                     ))}
-                </CalendarSlot>
 
+                    {/* Empty State */}
+                    {events.filter(e => e.start.date && !e.start.dateTime).length === 0 &&
+                        tasks.filter(t => t.scheduled_at && new Date(t.scheduled_at).getHours() === 0).length === 0 && (
+                            <div className="text-xs text-slate-400 italic pl-1">No all-day items</div>
+                        )}
+                </div>
+            </div>
+
+            <div className="relative border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-900 shadow-sm min-h-[800px] overflow-hidden">
                 {hours.map(hour => {
                     // Find tasks scheduled for this hour (excluding 00:00 which is All Day)
                     const slotTasks = tasks.filter(t => {
