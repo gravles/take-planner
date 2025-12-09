@@ -10,7 +10,7 @@ import { TaskListView } from '@/components/TaskListView';
 import { useState, useEffect } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutList, Calendar, Menu, X, Loader2, LogOut, Settings, Sun, Moon, BarChart2 } from 'lucide-react';
 import { useTheme } from "next-themes"
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, TouchSensor, KeyboardSensor, closestCorners } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, MouseSensor, TouchSensor, KeyboardSensor, closestCorners } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import Link from 'next/link';
 import { MobileNav } from '@/components/MobileNav';
@@ -112,7 +112,7 @@ export default function Home() {
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
       },
