@@ -71,42 +71,6 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
             console.error(`Error fetching ${provider} tokens:`, error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
-        try {
-            // 1. Fetch User Info to get Email
-            let email = '';
-
-            if (provider === 'google') {
-                const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-                if (res.ok) {
-                    const info = await res.json();
-                    email = info.email;
-                }
-            } else if (provider === 'azure') {
-                const res = await fetch('https://graph.microsoft.com/v1.0/me', {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                });
-                if (res.ok) {
-                    const info = await res.json();
-                    email = info.mail || info.userPrincipalName;
-                }
-            }
-
-            if (!email) {
-                console.error('Could not verify email from token. Aborting save.');
-                return;
-            }
-
-            console.log(`[useIntegrationToken] Saving token for ${email} (${provider})`);
-
-            // 2. Ensure profile exists
-            await supabase.from('profiles').upsert({ id: userId, updated_at: new Date().toISOString() }, { onConflict: 'id' });
-
             // 3. Upsert Integration
             // Check if this is the first one?
             // For now, we just upsert.

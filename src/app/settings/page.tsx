@@ -96,7 +96,8 @@ export default function SettingsPage() {
                     provider: provider,
                     options: {
                         redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
-                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
+                        queryParams: provider === 'google' ? { prompt: 'consent select_account' } : undefined
                     }
                 });
                 if (error) throw error;
@@ -105,7 +106,8 @@ export default function SettingsPage() {
                     provider: provider,
                     options: {
                         redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
-                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
+                        queryParams: provider === 'google' ? { prompt: 'consent select_account' } : undefined
                     }
                 });
                 if (error) throw error;
