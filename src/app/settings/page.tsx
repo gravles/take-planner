@@ -20,8 +20,9 @@ export default function SettingsPage() {
     // Initialize hooks to capture and save tokens after redirect
     // This is CRITICAL: The hooks check the URL for ?connected_provider=... and save the session token to the DB.
     // Without this, the token is lost after the OAuth redirect.
-    useIntegrationToken('google');
-    useIntegrationToken('azure');
+    // Initialize hooks to capture and save tokens after redirect
+    const { tokens: googleTokens } = useIntegrationToken('google');
+    const { tokens: azureTokens } = useIntegrationToken('azure');
 
     useEffect(() => {
         // Handle session check with onAuthStateChange to catch redirect updates
@@ -147,35 +148,39 @@ export default function SettingsPage() {
 
                     <div className="p-6 space-y-4">
                         {/* Google Calendar */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
-                                    <span className="text-xl">📅</span>
+                        <div className="flex flex-col p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-100">
+                                        <span className="text-xl">📅</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-medium text-gray-900">Google Calendar</h3>
+                                        <p className="text-xs text-gray-500">Sync your events</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="font-medium text-gray-900">Google Calendar</h3>
-                                    <p className="text-xs text-gray-500">Sync your events</p>
-                                </div>
-                            </div>
-                            {isGoogleConnected ? (
-                                <div className="flex items-center gap-2">
-                                    <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
-                                        Connected
-                                    </span>
-                                    <button
-                                        onClick={() => handleDisconnect('google')}
-                                        className="text-sm text-red-600 hover:text-red-800 underline"
-                                    >
-                                        Disconnect
-                                    </button>
-                                </div>
-                            ) : (
                                 <button
                                     onClick={() => handleConnect('google')}
                                     className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                                 >
-                                    Connect
+                                    {googleTokens.length > 0 ? 'Connect Another Account' : 'Connect'}
                                 </button>
+                            </div>
+
+                            {/* Connected Accounts List */}
+                            {googleTokens.length > 0 && (
+                                <div className="space-y-2 mt-2">
+                                    {googleTokens.map((t, idx) => (
+                                        <div key={idx} className="flex items-center justify-between pl-14 pr-2">
+                                            <span className="text-sm text-gray-600 font-mono bg-gray-200/50 px-2 py-0.5 rounded">
+                                                {t.account_email}
+                                            </span>
+                                            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">
+                                                Connected
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
 
@@ -190,17 +195,13 @@ export default function SettingsPage() {
                                     <p className="text-xs text-gray-500">Sync your tasks</p>
                                 </div>
                             </div>
-                            {isAzureConnected ? (
-                                <div className="flex items-center gap-2">
-                                    <span className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
-                                        Connected
-                                    </span>
-                                    <button
-                                        onClick={() => handleDisconnect('azure')}
-                                        className="text-sm text-red-600 hover:text-red-800 underline"
-                                    >
-                                        Disconnect
-                                    </button>
+                            {azureTokens.length > 0 ? (
+                                <div className="flex flex-col items-end gap-1">
+                                    {azureTokens.map((t, idx) => (
+                                        <span key={idx} className="px-3 py-1.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-md">
+                                            {t.account_email || 'Connected'}
+                                        </span>
+                                    ))}
                                 </div>
                             ) : (
                                 <button

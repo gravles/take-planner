@@ -1,80 +1,67 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
+export interface IntegrationToken {
+    access_token: string;
+    account_email: string;
+    is_primary: boolean;
+}
+
 export function useIntegrationToken(provider: 'google' | 'azure') {
-    const [token, setToken] = useState<string | null>(null);
+    const [tokens, setTokens] = useState<IntegrationToken[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Backward compatibility for single-token consumers (optional, or we update them)
+    const token = tokens.length > 0 ? tokens[0].access_token : null;
+
     useEffect(() => {
-        fetchToken();
+        fetchTokens();
+        handleNewConnection();
     }, [provider]);
 
-    const fetchToken = async () => {
+    const handleNewConnection = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session || !session.provider_token) return;
+
+        // Check if this fresh token matches our requested provider 'type'
+        // We can check URL or try to infer. 
+        const urlParams = new URLSearchParams(window.location.search);
+        const connectedProvider = urlParams.get('connected_provider');
+
+        // Only proceed if we explicitly asked for this provider OR it blindly matches
+        if (connectedProvider === provider) {
+            console.log(`[useIntegrationToken] Found fresh token for ${provider}. Verifying identity...`);
+            await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
+            // Clear the param to avoid re-saving loop (optional, but good UX)
+            // window.history.replaceState({}, '', window.location.pathname); 
+            // ^ commenting out to avoid Next.js hydration mismatches or aggressive URL changes
+
+            // Refresh list
+            fetchTokens();
+        }
+    };
+
+    const fetchTokens = async () => {
         try {
             setLoading(true);
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
-                setToken(null);
-                setLoading(false);
+                setTokens([]);
                 return;
             }
 
-            // Determine the active provider for the current session
-            // We use last_sign_in_at to determine which identity is currently "active" in the session
-            // and therefore which provider the session.provider_token belongs to.
-            // app_metadata.provider can be sticky (stays 'google' even if we just signed in with 'azure'),
-            // so we cannot trust it for the *session token* identity.
-            let activeProvider = session.user.app_metadata.provider;
-
-            if (session.user.identities && session.user.identities.length > 0) {
-                // Sort identities by last_sign_in_at descending
-                const sortedIdentities = [...session.user.identities].sort((a, b) => {
-                    return new Date(b.last_sign_in_at || 0).getTime() - new Date(a.last_sign_in_at || 0).getTime();
-                });
-                if (sortedIdentities[0]) {
-                    activeProvider = sortedIdentities[0].provider;
-                }
-            }
-
-            // CHECK URL PARAM: This is the most reliable signal.
-            // If we just came back from an OAuth flow, the URL will have ?connected_provider=...
-            const urlParams = new URLSearchParams(window.location.search);
-            const connectedProvider = urlParams.get('connected_provider');
-
-            console.log(`[useIntegrationToken] Requested: ${provider}, Active (Calculated): ${activeProvider}, URL Param: ${connectedProvider}`);
-
-            // If the URL param matches the requested provider, we TRUST it explicitly.
-            // Or if the calculated active provider matches.
-            const isMatch = (connectedProvider === provider) || (activeProvider === provider);
-
-            // If we have a match and a token, SAVE it.
-            if (isMatch && session.provider_token) {
-                console.log(`[useIntegrationToken] Saving fresh session token for ${provider} (Match source: ${connectedProvider === provider ? 'URL' : 'Calculated'})`);
-                await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
-            }
-
-            // ALWAYS fetch from the database to return the token.
-            // This ensures we get the token specifically associated with the requested provider,
-            // avoiding any ambiguity about what session.provider_token currently holds.
-            console.log(`[useIntegrationToken] Fetching from DB for ${provider}`);
             const { data, error } = await supabase
                 .from('user_integrations')
-                .select('access_token')
+                .select('access_token, account_email, is_primary')
                 .eq('user_id', session.user.id)
-                .eq('provider', provider)
-                .maybeSingle();
+                .eq('provider', provider);
 
             if (data) {
-                console.log(`[useIntegrationToken] Found DB token for ${provider}`);
-                setToken(data.access_token);
-            } else {
-                console.log(`[useIntegrationToken] No DB token for ${provider}`);
-                setToken(null);
+                setTokens(data);
             }
         } catch (error) {
-            console.error(`Error fetching ${provider} token:`, error);
-            setToken(null);
+            console.error(`Error fetching ${provider} tokens:`, error);
         } finally {
             setLoading(false);
         }
@@ -82,34 +69,58 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
         try {
-            // Ensure profile exists first
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: userId,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'id' });
+            // 1. Fetch User Info to get Email
+            let email = '';
 
-            if (profileError) {
-                console.warn('Error ensuring profile exists:', profileError);
+            if (provider === 'google') {
+                const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                if (res.ok) {
+                    const info = await res.json();
+                    email = info.email;
+                }
+            } else if (provider === 'azure') {
+                const res = await fetch('https://graph.microsoft.com/v1.0/me', {
+                    headers: { Authorization: `Bearer ${accessToken}` }
+                });
+                if (res.ok) {
+                    const info = await res.json();
+                    email = info.mail || info.userPrincipalName;
+                }
             }
 
+            if (!email) {
+                console.error('Could not verify email from token. Aborting save.');
+                return;
+            }
+
+            console.log(`[useIntegrationToken] Saving token for ${email} (${provider})`);
+
+            // 2. Ensure profile exists
+            await supabase.from('profiles').upsert({ id: userId, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+
+            // 3. Upsert Integration
+            // Check if this is the first one?
+            // For now, we just upsert.
             const { error } = await supabase
                 .from('user_integrations')
                 .upsert({
                     user_id: userId,
                     provider: provider,
+                    account_email: email,
                     access_token: accessToken,
                     refresh_token: refreshToken,
                     updated_at: new Date().toISOString(),
                     expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
-                }, { onConflict: 'user_id,provider' });
+                }, { onConflict: 'user_id,provider,account_email' });
 
             if (error) console.error('Error saving token:', error);
+
         } catch (err) {
             console.error('Error saving token:', err);
         }
     };
 
-    return { token, loading, fetchToken };
+    return { tokens, token, loading, fetchTokens }; // Expose both for compatibility
 }
