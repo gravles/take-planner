@@ -88,26 +88,30 @@ export default function SettingsPage() {
 
     async function handleConnect(provider: 'google' | 'azure') {
         try {
-            // We use signInWithOAuth instead of linkIdentity to ensure we get a fresh access token
-            // in the session.provider_token field. linkIdentity often doesn't expose the new token
-            // in the session object, making it hard to capture.
-            // By signing in, we switch the active session, but our useIntegrationToken hook
-            // will capture and save the token to the database.
-            // Since we persist tokens for all providers, switching the active user is fine
-            // (as long as the accounts are linked or use the same email).
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: provider,
-                options: {
-                    // Use origin (home) to ensure it matches the allowed redirect URLs in Supabase
-                    // Append the provider param so we know which one we just connected when we get back
-                    redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
-                    // openid profile email are standard OIDC scopes to ensure we get the identity token
-                    scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
-                }
-            });
+            const { data: { session } } = await supabase.auth.getSession();
 
-            if (error) throw error;
-            // The user will be redirected
+            // If we are logged in, we use linkIdentity to attach the new account to the CURRENT user.
+            // If we use signInWithOAuth, it replaces the session (logs out current user).
+            if (session) {
+                const { data, error } = await supabase.auth.linkIdentity({
+                    provider: provider,
+                    options: {
+                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    }
+                });
+                if (error) throw error;
+            } else {
+                // Not logged in, standard sign in
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: provider,
+                    options: {
+                        redirectTo: `${window.location.origin}/settings?connected_provider=${provider}`,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly'
+                    }
+                });
+                if (error) throw error;
+            }
         } catch (error: any) {
             console.error('Error connecting account:', error);
             setMessage({ type: 'error', text: 'Error connecting account: ' + error.message });
