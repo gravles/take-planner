@@ -17,7 +17,7 @@ interface WeekViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: {
+function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick }: {
     date: Date;
     tasks: Task[];
     categories?: Category[];
@@ -26,7 +26,9 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
+    onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
+    onEventClick: (event: GoogleEvent) => void;
 }) {
     const { setNodeRef } = useDroppable({
         id: `day-${format(date, 'yyyy-MM-dd')}`,
@@ -69,12 +71,11 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
                             style={{
                                 backgroundColor: `${event.displayColor}20`,
                                 borderColor: event.displayColor,
-                                borderColor: event.displayColor,
                                 color: '#1e293b'
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setSelectedEvent(event);
+                                onEventClick(event);
                             }}
                         >
                             <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
@@ -199,6 +200,7 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
                                 onToggleComplete={onToggleComplete}
                                 onUnschedule={onUnschedule}
                                 onDelete={onDelete}
+                                onEventClick={(e) => setSelectedEvent(e)}
                             />
                         );
                     })}
