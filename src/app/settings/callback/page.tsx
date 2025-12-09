@@ -36,20 +36,13 @@ function CallbackContent() {
 
                             if (!unlinkError) {
                                 setStatus('Conflict resolved. Retrying connection...');
-                                // Redirect back to settings to auto-trigger connect? 
-                                // Or better, just redirect to settings and let user click again to avoid infinite loops if it fails again.
-                                // OR: Manually trigger the auth flow again here?
-                                // Let's simplify: Send back to settings with a message?
-                                // Actually, we can just force a new auth flow URL here.
-                                // But `handleConnect` in SettingsPage is what generates the URL.
-                                // Let's push back to settings with a special param to auto-retry or just invalidating the stale state.
                                 setTimeout(() => {
                                     window.location.href = `/settings?retry_provider=${provider}`;
                                 }, 1500);
                                 return;
                             } else {
                                 console.error('Unlink failed:', unlinkError);
-                                setStatus('Error: Could not resolve account conflict.');
+                                setStatus(`Error: Unlink failed. ${unlinkError.message || JSON.stringify(unlinkError)}`);
                             }
 
                         } else {
