@@ -2,26 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ArrowLeft, User, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-interface Profile {
-    id: string;
-    username: string | null;
-    full_name: string | null;
-    avatar_url: string | null;
-}
+
 
 import { useIntegrationToken } from '@/hooks/useIntegrationToken';
+import { ProfileSettings } from '@/components/ProfileSettings';
 
 export default function SettingsPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [fullName, setFullName] = useState('');
-    const [username, setUsername] = useState('');
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
 
@@ -35,13 +27,9 @@ export default function SettingsPage() {
         // Handle session check with onAuthStateChange to catch redirect updates
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
-                // Fetch profile and integrations
-                fetchProfile(session.user.id);
+                // Fetch integrations
+                fetchIntegrations(session.user.id);
             } else {
-                // Only redirect if we are sure there is no session and no hash processing happening
-                // But for now, let's just show loading or redirect after a timeout
-                // router.push('/'); 
-                // Better: let the user manually go back if needed, or redirect after delay
                 setLoading(false);
             }
         });
@@ -49,30 +37,9 @@ export default function SettingsPage() {
         return () => subscription.unsubscribe();
     }, []);
 
-    async function fetchProfile(userId: string) {
+    async function fetchIntegrations(userId: string) {
         try {
             setLoading(true);
-
-            // Fetch profile
-            const { data: profileData, error: profileError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', userId)
-                .single();
-
-            if (profileData) {
-                setProfile(profileData);
-                setFullName(profileData.full_name || '');
-                setUsername(profileData.username || '');
-            } else {
-                // Fallback to auth metadata
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                    setFullName(session.user.user_metadata.full_name || '');
-                }
-            }
-
-            // Fetch integrations
             const { data: integrationsData, error: integrationsError } = await supabase
                 .from('user_integrations')
                 .select('provider')
@@ -82,37 +49,10 @@ export default function SettingsPage() {
                 const dbProviders = integrationsData.map(i => i.provider);
                 setConnectedProviders(dbProviders);
             }
-
         } catch (error) {
-            console.error('Error loading user data:', error);
+            console.error('Error loading integrations:', error);
         } finally {
             setLoading(false);
-        }
-    }
-
-    async function updateProfile() {
-        try {
-            setSaving(true);
-            setMessage(null);
-            const { data: { session } } = await supabase.auth.getSession();
-
-            if (!session) return;
-
-            const updates = {
-                id: session.user.id,
-                full_name: fullName,
-                username: username,
-                updated_at: new Date().toISOString(),
-            };
-
-            const { error } = await supabase.from('profiles').upsert(updates);
-
-            if (error) throw error;
-            setMessage({ type: 'success', text: 'Profile updated successfully!' });
-        } catch (error: any) {
-            setMessage({ type: 'error', text: 'Error updating profile: ' + error.message });
-        } finally {
-            setSaving(false);
         }
     }
 
@@ -136,7 +76,7 @@ export default function SettingsPage() {
             setMessage({ type: 'success', text: `Disconnected ${provider === 'google' ? 'Google' : 'Microsoft'} account.` });
 
             // Refresh profile to ensure everything is synced
-            fetchProfile(session.user.id);
+            fetchIntegrations(session.user.id);
         } catch (error: any) {
             console.error('Error disconnecting:', error);
             setMessage({ type: 'error', text: 'Error disconnecting: ' + error.message });
@@ -196,55 +136,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Profile Section */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
-                    <div className="p-6 border-b border-gray-100">
-                        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <User className="w-5 h-5 text-gray-500" />
-                            Profile Information
-                        </h2>
-                    </div>
-
-                    <div className="p-6 space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <input
-                                type="text"
-                                value={fullName}
-                                onChange={(e) => setFullName(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                                placeholder="Your Name"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                                placeholder="username"
-                            />
-                        </div>
-
-                        {message && (
-                            <div className={`p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                {message.text}
-                            </div>
-                        )}
-
-                        <div className="pt-2">
-                            <button
-                                onClick={updateProfile}
-                                disabled={saving}
-                                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50"
-                            >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                Save Changes
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <ProfileSettings />
 
                 {/* Integrations Section */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
