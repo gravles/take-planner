@@ -13,50 +13,67 @@ function CallbackContent() {
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                // Debug logging
-                console.log('[AuthCallback] Full URL:', window.location.href);
-                console.log('[AuthCallback] Hash:', window.location.hash);
-
-                // Get the hash params manually
-                const hash = window.location.hash.substring(1);
-                const hashParams = new URLSearchParams(hash);
-
-                const providerToken = hashParams.get('provider_token');
-                const providerRefreshToken = hashParams.get('provider_refresh_token');
-
+                // 1. Check for PKCE Code (Server-side flow)
+                const code = searchParams.get('code');
                 const provider = searchParams.get('provider') || 'azure';
 
-                console.log('[AuthCallback] Target Provider:', provider);
+                let finalToken: string | null = null;
+                let finalRefreshToken: string | null = null;
 
-                // Initialize session
-                const { data: { session } } = await supabase.auth.getSession();
+                console.log(`[AuthCallback] Provider: ${provider}`);
+                console.log('[AuthCallback] Full URL:', window.location.href);
 
-                // Effective Token Strategy
-                let finalToken = providerToken;
-                let finalRefreshToken = providerRefreshToken;
+                if (code) {
+                    console.log('[AuthCallback] Found PKCE code. Exchanging...');
+                    setStatus('Exchanging code for token...');
 
-                if (finalToken) {
-                    console.log('[AuthCallback] Using token from HASH.');
-                } else if (session?.provider_token) {
-                    // Fallback to session token?
-                    // WE MUST VERIFY IT IS FOR THE CORRECT PROVIDER.
-                    console.warn('[AuthCallback] No hash token. Attempting session token fallback.');
-                    console.log('[AuthCallback] Session User:', session.user.email);
-                    console.log('[AuthCallback] Session Provider Token (first 10):', session.provider_token.substring(0, 10));
+                    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-                    finalToken = session.provider_token;
-                    finalRefreshToken = session.provider_refresh_token || null;
+                    if (error) {
+                        console.error('[AuthCallback] Code exchange failed:', error);
+                        setStatus('Error: Code exchange failed.');
+                        return;
+                    }
+
+                    if (data?.session) {
+                        console.log('[AuthCallback] Code exchange success.');
+                        // The session should now contain the provider_token for the *just connected* account.
+                        finalToken = data.session.provider_token || null;
+                        finalRefreshToken = data.session.provider_refresh_token || null;
+                    }
                 } else {
-                    console.error('[AuthCallback] No token found in Hash OR Session.');
-                    setStatus('Error: Could not retrieve connection token.');
-                    setTimeout(() => router.push('/settings'), 3000);
-                    return;
+                    // 2. Check for Implicit Hash (Client-side flow)
+                    const hash = window.location.hash.substring(1);
+                    const hashParams = new URLSearchParams(hash);
+                    const hashToken = hashParams.get('provider_token');
+
+                    if (hashToken) {
+                        console.log('[AuthCallback] Found token in hash.');
+                        finalToken = hashToken;
+                        finalRefreshToken = hashParams.get('provider_refresh_token') || null;
+                    }
                 }
 
-                if (session && finalToken) {
-                    setStatus(`Linking ${provider} account...`);
+                // 3. Last Resort: Check active session (careful!)
+                if (!finalToken) {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    // Only use if we are SURE it's not stale.
+                    if (session?.provider_token) {
+                        console.warn('[AuthCallback] Falling back to existing session token. Warning: Might be stale or wrong provider.');
+                        finalToken = session.provider_token;
+                        finalRefreshToken = session.provider_refresh_token || null;
+                    }
+                }
 
-                    // Verify and Save
+                if (finalToken) {
+                    // Refresh session to get user ID if needed
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (!session) {
+                        setStatus('Error: No active session.');
+                        return;
+                    }
+
+                    setStatus(`Linking ${provider} account...`);
                     const success = await saveToken(session.user.id, provider, finalToken, finalRefreshToken);
 
                     if (success) {
@@ -66,9 +83,10 @@ function CallbackContent() {
                         setStatus(`Connection failed: Invalid ${provider} token or email verification failed.`);
                         setTimeout(() => router.push('/settings'), 3000);
                     }
-                } else if (!session) {
-                    setStatus('Error: No active session. Please log in first.');
-                    setTimeout(() => router.push('/login'), 3000);
+                } else {
+                    console.error('[AuthCallback] No token found via Code, Hash, or Session.');
+                    setStatus('Error: Could not retrieve connection token.');
+                    // setTimeout(() => router.push('/settings'), 3000);
                 }
 
             } catch (error) {
@@ -79,7 +97,7 @@ function CallbackContent() {
         };
 
         handleCallback();
-    }, []);
+    }, [searchParams]); // Add searchParams dependency for code check
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null): Promise<boolean> => {
         try {
