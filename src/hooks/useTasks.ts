@@ -91,6 +91,8 @@ export function useTasks() {
                     if (response.ok) {
                         const msTask = await response.json();
                         externalId = msTask.id;
+                    } else if (response.status === 401) {
+                        console.warn('MS To Do Token invalid (401). Task will be created locally only.');
                     }
                 }
             }
@@ -115,6 +117,8 @@ export function useTasks() {
                 if (response.ok) {
                     const msTask = await response.json();
                     externalId = msTask.id;
+                } else if (response.status === 401) {
+                    console.warn('MS To Do Token invalid (401). Task will be created locally only.');
                 }
             }
 
@@ -178,7 +182,7 @@ export function useTasks() {
                         }
                     }
 
-                    await fetch(url, {
+                    const res = await fetch(url, {
                         method: 'PATCH',
                         headers: {
                             Authorization: `Bearer ${msToken}`,
@@ -186,6 +190,10 @@ export function useTasks() {
                         },
                         body: JSON.stringify(msUpdates)
                     });
+
+                    if (res.status === 401) {
+                        console.warn('MS To Do Token invalid (401). Sync failed.');
+                    }
                 }
             }
 
@@ -245,7 +253,7 @@ export function useTasks() {
             // Handle Microsoft To Do deletion
             const task = tasks.find(t => t.id === id);
             if (task?.source === 'microsoft_todo' && task.external_id && msToken) {
-                await fetch(
+                const res = await fetch(
                     `https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks/${task.external_id}`,
                     {
                         method: 'DELETE',
@@ -254,6 +262,9 @@ export function useTasks() {
                         }
                     }
                 );
+                if (res.status === 401) {
+                    console.warn('MS To Do Token invalid (401). Deletion failed remotely.');
+                }
             }
 
             const { error } = await supabase

@@ -64,8 +64,14 @@ export function useMicrosoftToDo() {
             await syncTasksToSupabase(allMsTasks, categoryMap);
 
         } catch (err: any) {
-            console.error('Error fetching Microsoft To Do data:', err);
-            setError(err.message);
+            // Silently fail on auth errors to prevent UI disruption
+            if (err.message?.includes('401') || err.message?.includes('Unauthorized')) {
+                console.warn('Microsoft To Do token expired or invalid.');
+                setError('Session expired. Please reconnect Microsoft To Do.');
+            } else {
+                console.error('Error fetching Microsoft To Do data:', err);
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

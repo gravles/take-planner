@@ -10,8 +10,12 @@ export function NotificationManager({ tasks }: NotificationManagerProps) {
 
     useEffect(() => {
         // Request permission on mount
-        if (Notification.permission === 'default') {
-            Notification.requestPermission();
+        try {
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        } catch (e) {
+            console.warn('Notifications not supported or blocked:', e);
         }
     }, []);
 
