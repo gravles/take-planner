@@ -11,11 +11,12 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
     const [tokens, setTokens] = useState<IntegrationToken[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Backward compatibility for single-token consumers (optional, or we update them)
+    // Backward compatibility for single-token consumers
     const token = tokens.length > 0 ? tokens[0].access_token : null;
 
     useEffect(() => {
         fetchTokens();
+        // Check for new connection on mount
         handleNewConnection();
     }, [provider]);
 
@@ -24,19 +25,15 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
         if (!session || !session.provider_token) return;
 
         // Check if this fresh token matches our requested provider 'type'
-        // We can check URL or try to infer. 
         const urlParams = new URLSearchParams(window.location.search);
         const connectedProvider = urlParams.get('connected_provider');
 
-        // Only proceed if we explicitly asked for this provider OR it blindly matches
+        // Only proceed if we explicitly asked for this provider
         if (connectedProvider === provider) {
             console.log(`[useIntegrationToken] Found fresh token for ${provider}. Verifying identity...`);
             await saveToken(session.user.id, provider, session.provider_token, session.provider_refresh_token);
-            // Clear the param to avoid re-saving loop (optional, but good UX)
-            // window.history.replaceState({}, '', window.location.pathname); 
-            // ^ commenting out to avoid Next.js hydration mismatches or aggressive URL changes
 
-            // Refresh list
+            // Refresh list to show the new connection
             fetchTokens();
         }
     };
@@ -58,7 +55,7 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 .eq('provider', provider);
 
             if (data) {
-                console.log(`[useIntegrationToken] Loaded ${data.length} tokens for ${provider}`, data);
+                console.log(`[useIntegrationToken] Loaded ${data.length} tokens for ${provider}`);
                 setTokens(data);
             } else {
                 console.log(`[useIntegrationToken] No data found for ${provider}`);
@@ -71,15 +68,59 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
             console.error(`Error fetching ${provider} tokens:`, error);
         } finally {
             setLoading(false);
-            // 3. Upsert Integration
-            // Check if this is the first one?
-            // For now, we just upsert.
+        }
+    };
+
+    const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
+        try {
+            let providerEmail = null;
+
+            console.log(`[useIntegrationToken] Verifying email for ${provider} with token: ${accessToken?.substring(0, 10)}...`);
+
+            try {
+                if (provider === 'google') {
+                    const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        providerEmail = user.email;
+                    } else {
+                        console.warn(`[useIntegrationToken] Google UserInfo failed: ${res.status} ${res.statusText}`);
+                    }
+                } else if (provider === 'azure') {
+                    const res = await fetch('https://graph.microsoft.com/v1.0/me', {
+                        headers: { Authorization: `Bearer ${accessToken}` }
+                    });
+                    if (res.ok) {
+                        const user = await res.json();
+                        providerEmail = user.mail || user.userPrincipalName;
+                    } else {
+                        console.warn(`[useIntegrationToken] MS Graph /me failed: ${res.status} ${res.statusText}`);
+                    }
+                }
+            } catch (err) {
+                console.error(`[useIntegrationToken] Email fetch error:`, err);
+            }
+
+            if (!providerEmail) {
+                console.warn(`[useIntegrationToken] Could not verify email from token. Using fallback.`);
+                // Fallback to allow saving even if email fetch fails
+                providerEmail = `unknown-${Date.now()}@${provider}.com`;
+            }
+
+            console.log(`[useIntegrationToken] Saving token for ${providerEmail}`);
+
+            // Ensure profile exists
+            await supabase.from('profiles').upsert({ id: userId, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+
+            // Upsert Integration
             const { error } = await supabase
                 .from('user_integrations')
                 .upsert({
                     user_id: userId,
                     provider: provider,
-                    account_email: email,
+                    account_email: providerEmail,
                     access_token: accessToken,
                     refresh_token: refreshToken,
                     updated_at: new Date().toISOString(),
@@ -93,5 +134,5 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
         }
     };
 
-    return { tokens, token, loading, fetchTokens }; // Expose both for compatibility
+    return { tokens, token, loading, fetchTokens };
 }
