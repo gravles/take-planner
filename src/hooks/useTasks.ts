@@ -103,27 +103,41 @@ export function useTasks() {
             }
 
             // Fallback: If source is explicitly MS To Do but no category (default list)
-            if (source === 'microsoft_todo' && !externalId && msToken) {
-                const response = await fetch(
-                    'https://graph.microsoft.com/v1.0/me/todo/lists/tasks/tasks',
-                    {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${msToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            title: newTask.title,
-                            importance: newTask.priority === 'high' ? 'high' : 'normal',
-                        })
-                    }
-                );
+            if (source === 'microsoft_todo' && !externalId) {
+                if (msToken) {
+                    console.log('[addTask] Attempting to create task in default MS To Do list...');
+                    try {
+                        const response = await fetch(
+                            'https://graph.microsoft.com/v1.0/me/todo/lists/Tasks/tasks',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    Authorization: `Bearer ${msToken}`,
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    title: newTask.title,
+                                    importance: newTask.priority === 'high' ? 'high' : 'normal',
+                                })
+                            }
+                        );
 
-                if (response.ok) {
-                    const msTask = await response.json();
-                    externalId = msTask.id;
-                } else if (response.status === 401) {
-                    console.warn('MS To Do Token invalid (401). Task will be created locally only.');
+                        if (response.ok) {
+                            const msTask = await response.json();
+                            externalId = msTask.id;
+                            console.log('[addTask] Successfully created in MS To Do:', externalId);
+                        } else {
+                            const errorText = await response.text();
+                            console.error('[addTask] Failed to create in MS To Do:', response.status, errorText);
+                            if (response.status === 401) {
+                                console.warn('MS To Do Token invalid (401). Task will be created locally only.');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('[addTask] Exception creating in MS To Do:', err);
+                    }
+                } else {
+                    console.warn('[addTask] Source is microsoft_todo but NO TOKEN available. Skipping sync.');
                 }
             }
 
