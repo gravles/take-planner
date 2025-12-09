@@ -26,7 +26,6 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     onEdit?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
-    onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
     onEventClick: (event: GoogleEvent) => void;
 }) {
