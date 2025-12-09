@@ -13,52 +13,78 @@ function CallbackContent() {
     useEffect(() => {
         const handleCallback = async () => {
             try {
+                // Debug logging
+                console.log('[AuthCallback] Full URL:', window.location.href);
+                console.log('[AuthCallback] Hash:', window.location.hash);
+
                 // Get the hash params manually
                 const hash = window.location.hash.substring(1);
                 const hashParams = new URLSearchParams(hash);
 
                 const providerToken = hashParams.get('provider_token');
                 const providerRefreshToken = hashParams.get('provider_refresh_token');
-                const accessToken = hashParams.get('access_token'); // Supabase session token (optional usage)
 
-                const provider = searchParams.get('provider') || 'azure'; // Default or passed param
+                const provider = searchParams.get('provider') || 'azure';
 
-                console.log('[AuthCallback] Processing hash for:', provider);
+                console.log('[AuthCallback] Target Provider:', provider);
 
-                if (!providerToken) {
-                    console.warn('[AuthCallback] No provider_token found in hash. Session might be used directly if available.');
-                }
-
+                // Initialize session
                 const { data: { session } } = await supabase.auth.getSession();
 
-                if (session && providerToken) {
+                // Effective Token Strategy
+                let finalToken = providerToken;
+                let finalRefreshToken = providerRefreshToken;
+
+                if (finalToken) {
+                    console.log('[AuthCallback] Using token from HASH.');
+                } else if (session?.provider_token) {
+                    // Fallback to session token?
+                    // WE MUST VERIFY IT IS FOR THE CORRECT PROVIDER.
+                    console.warn('[AuthCallback] No hash token. Attempting session token fallback.');
+                    console.log('[AuthCallback] Session User:', session.user.email);
+                    console.log('[AuthCallback] Session Provider Token (first 10):', session.provider_token.substring(0, 10));
+
+                    finalToken = session.provider_token;
+                    finalRefreshToken = session.provider_refresh_token;
+                } else {
+                    console.error('[AuthCallback] No token found in Hash OR Session.');
+                    setStatus('Error: Could not retrieve connection token.');
+                    setTimeout(() => router.push('/settings'), 3000);
+                    return;
+                }
+
+                if (session && finalToken) {
                     setStatus(`Linking ${provider} account...`);
 
                     // Verify and Save
-                    await saveToken(session.user.id, provider, providerToken, providerRefreshToken);
+                    const success = await saveToken(session.user.id, provider, finalToken, finalRefreshToken);
 
-                    setStatus('Success! Redirecting...');
-                    setTimeout(() => router.push('/settings'), 1000);
+                    if (success) {
+                        setStatus('Success! Redirecting...');
+                        setTimeout(() => router.push('/settings'), 1000);
+                    } else {
+                        setStatus(`Connection failed: Invalid ${provider} token or email verification failed.`);
+                        setTimeout(() => router.push('/settings'), 3000);
+                    }
                 } else if (!session) {
                     setStatus('Error: No active session. Please log in first.');
                     setTimeout(() => router.push('/login'), 3000);
-                } else {
-                    setStatus('Finishing setup...');
-                    setTimeout(() => router.push('/settings'), 1500);
                 }
 
             } catch (error) {
                 console.error('[AuthCallback] Error:', error);
                 setStatus('Error connecting account.');
+                setTimeout(() => router.push('/settings'), 3000);
             }
         };
 
         handleCallback();
     }, []);
 
-    const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {
+    const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null): Promise<boolean> => {
         try {
             let providerEmail = null;
+            console.log(`[AuthCallback] Verifying ${provider} token...`);
 
             if (provider === 'google') {
                 const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -67,6 +93,9 @@ function CallbackContent() {
                 if (res.ok) {
                     const user = await res.json();
                     providerEmail = user.email;
+                    console.log('[AuthCallback] Verified Google Email:', providerEmail);
+                } else {
+                    console.warn('[AuthCallback] Google Verify Failed:', res.status, res.statusText);
                 }
             } else if (provider === 'azure') {
                 const res = await fetch('https://graph.microsoft.com/v1.0/me', {
@@ -75,13 +104,16 @@ function CallbackContent() {
                 if (res.ok) {
                     const user = await res.json();
                     providerEmail = user.mail || user.userPrincipalName;
+                    console.log('[AuthCallback] Verified Azure Email:', providerEmail);
+                } else {
+                    console.warn('[AuthCallback] Azure Verify Failed:', res.status, res.statusText);
                 }
             }
 
             if (providerEmail) {
                 await supabase.from('profiles').upsert({ id: userId, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 
-                await supabase
+                const { error } = await supabase
                     .from('user_integrations')
                     .upsert({
                         user_id: userId,
@@ -93,13 +125,21 @@ function CallbackContent() {
                         expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
                     }, { onConflict: 'user_id,provider,account_email' });
 
-                console.log('[AuthCallback] Token saved for:', providerEmail);
+                if (error) {
+                    console.error('[AuthCallback] DB Upsert Error:', error);
+                    return false;
+                }
+
+                console.log('[AuthCallback] Token saved successfully.');
+                return true;
             } else {
-                console.error('[AuthCallback] Could not verify email. Not saving.');
+                console.error('[AuthCallback] Could not verify email (Invalid Token?). Not saving.');
+                return false;
             }
 
         } catch (e) {
             console.error('[AuthCallback] Save error:', e);
+            return false;
         }
     };
 
