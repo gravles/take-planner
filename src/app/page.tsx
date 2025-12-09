@@ -13,6 +13,7 @@ import { useTheme } from "next-themes"
 import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, closestCorners } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import Link from 'next/link';
+import { MobileNav } from '@/components/MobileNav';
 import { Auth } from '@/components/Auth';
 import { supabase } from '@/lib/supabase';
 import { TaskCard } from '@/components/TaskCard';
@@ -368,7 +369,7 @@ export default function Home() {
               <h1 className="text-lg md:text-xl font-bold text-slate-800 truncate hidden sm:block tracking-tight">My Planner</h1>
 
               {viewMode !== 'list' && (
-                <div className="flex items-center gap-1 md:gap-2 bg-slate-100/50 rounded-lg p-1 border border-slate-200/50">
+                <div className="hidden md:flex items-center gap-1 md:gap-2 bg-slate-100/50 rounded-lg p-1 border border-slate-200/50">
                   <button
                     onClick={() => {
                       setCurrentDate(new Date());
@@ -396,7 +397,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar border border-slate-200/50 dark:border-slate-700/50">
+              <div className="hidden md:flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-1 ml-2 md:ml-4 overflow-x-auto no-scrollbar border border-slate-200/50 dark:border-slate-700/50">
                 <button
                   onClick={() => setViewMode('day')}
                   className={`px-3 py-1.5 text-xs md:text-sm font-medium rounded-md transition-all ${viewMode === 'day' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'}`}
@@ -549,6 +550,17 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* Mobile Navigation */}
+      <MobileNav />
+
+      {/* Floating Action Button (Mobile) */}
+      <button
+        onClick={handleCreateTask}
+        className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-blue-700 active:scale-95 transition-all"
+      >
+        <Plus className="w-8 h-8" />
+      </button>
 
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} /> : null}
