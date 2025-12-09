@@ -513,6 +513,48 @@ export default function Home() {
             </div>
           </header>
 
+          {/* Mobile Date & View Controls */}
+          <div className="md:hidden flex flex-col border-b border-slate-200/60 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md px-4 py-2 gap-2 sticky top-16 z-20">
+            {/* Date Controls */}
+            {viewMode !== 'list' && (
+              <div className="flex items-center justify-between bg-slate-100/50 dark:bg-slate-800/50 rounded-lg p-1">
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() - 1)))}
+                  className="p-1.5 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+
+                <div className="text-sm font-medium">
+                  <DatePicker currentDate={currentDate} onDateChange={setCurrentDate} />
+                </div>
+
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.setDate(currentDate.getDate() + 1)))}
+                  className="p-1.5 hover:bg-white dark:hover:bg-slate-700 shadow-sm rounded-md transition-all text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
+            {/* View Toggles */}
+            <div className="flex items-center bg-slate-100/80 dark:bg-slate-800/80 rounded-lg p-1 border border-slate-200/50 dark:border-slate-700/50">
+              {(['day', 'week', 'month', 'list'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode)}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all capitalize ${viewMode === mode
+                      ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100 ring-1 ring-black/5 dark:ring-white/5'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {viewMode === 'day' && (
             <CalendarView
               tasks={scheduledTasks}
