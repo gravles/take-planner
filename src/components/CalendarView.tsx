@@ -157,7 +157,14 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                                                 zIndex: 5
                                             }}
                                         >
-                                            <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm flex flex-col">
+                                            <div
+                                                className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 hover:opacity-100 hover:z-20 shadow-sm flex flex-col transition-opacity"
+                                                style={{
+                                                    backgroundColor: `${event.displayColor}20`, // 20 = ~12% opacity
+                                                    borderColor: event.displayColor,
+                                                    color: '#1e293b' // slate-800
+                                                }}
+                                            >
                                                 <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
                                                 <div className="text-blue-600 text-[10px] truncate">
                                                     {date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {endDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}

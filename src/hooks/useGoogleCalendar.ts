@@ -85,15 +85,8 @@ export function useGoogleCalendar() {
         }
     };
 
-    // Auto-fetch when tokens are available
-    useEffect(() => {
-        if (tokens.length > 0) {
-            const now = new Date();
-            const end = new Date();
-            end.setDate(end.getDate() + 7); // Fetch next 7 days by default
-            fetchEvents(now, end);
-        }
-    }, [tokens]);
+    // Auto-fetch loop removed in favor of page-controlled fetching
+    // to prevent race conditions with viewMode ranges.
 
     return { events, loading: loading || tokenLoading, error, fetchEvents };
 }

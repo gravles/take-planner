@@ -54,7 +54,14 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
                 {/* Events */}
                 {events.map(event => (
                     <div key={event.id} className="min-h-0 shrink-0">
-                        <div className="bg-blue-100 border-l-2 border-blue-500 rounded px-1 py-0.5 text-[10px] truncate text-blue-800 font-medium">
+                        <div
+                            className="border-l-2 rounded px-1 py-0.5 text-[10px] truncate font-medium"
+                            style={{
+                                backgroundColor: `${event.displayColor}20`,
+                                borderColor: event.displayColor,
+                                color: '#1e293b'
+                            }}
+                        >
                             {event.summary}
                         </div>
                     </div>

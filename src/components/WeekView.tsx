@@ -64,7 +64,14 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
                             height: `${height}px`,
                         }}
                     >
-                        <div className="h-full w-full bg-blue-100 border-l-4 border-blue-500 rounded p-1 text-xs overflow-hidden opacity-90 shadow-sm flex flex-col">
+                        <div
+                            className="h-full w-full border-l-4 rounded p-1 text-xs overflow-hidden opacity-90 shadow-sm flex flex-col"
+                            style={{
+                                backgroundColor: `${event.displayColor}20`,
+                                borderColor: event.displayColor,
+                                color: '#1e293b'
+                            }}
+                        >
                             <div className="font-semibold text-blue-800 truncate">{event.summary}</div>
                             <div className="text-blue-600 text-[10px] truncate">
                                 {eventStart.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })} - {eventEnd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
