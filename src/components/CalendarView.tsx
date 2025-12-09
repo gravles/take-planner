@@ -147,7 +147,7 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
 
                                     return (
                                         <div
-                                            key={event.id}
+                                            key={`${event.id}-${event.account_email || 'p'}`}
                                             className="absolute z-10 px-1 transition-all duration-200"
                                             style={{
                                                 height: `${height}px`,

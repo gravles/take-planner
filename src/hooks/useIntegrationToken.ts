@@ -149,7 +149,14 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                     expires_at: new Date(Date.now() + 3600 * 1000).toISOString()
                 }, { onConflict: 'user_id,provider,account_email' });
 
-            if (error) console.error('Error saving token:', error);
+            if (error) {
+                console.error('Error saving token:', error);
+                if (error.code === '23505' || error.message.includes('constraint')) {
+                    alert('Database Schema Error: It looks like your database is not configured for multiple accounts yet. Please run the `fix_constraints.sql` script in Supabase to fix this.');
+                }
+            } else {
+                console.log(`[useIntegrationToken] Automatically saved token for ${providerEmail}`);
+            }
 
         } catch (err) {
             console.error('Error saving token:', err);
