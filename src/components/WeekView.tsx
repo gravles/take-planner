@@ -372,77 +372,84 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
         <div className="flex h-full overflow-hidden flex-col">
             <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
             {/* Header */}
-            <div className="flex border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shrink-0 pl-16 scrollbar-gutter-stable">
-                {weekDays.map(date => {
-                    const isToday = isSameDay(date, new Date());
-                    return (
-                        <div key={date.toISOString()} className="flex-1 py-2 text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0">
-                            <div className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">{format(date, 'EEE')}</div>
-                            <div className={cn("text-sm font-bold inline-block w-7 h-7 leading-7 rounded-full", isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-slate-100")}>
-                                {format(date, 'd')}
+            <div className="flex border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shrink-0 scrollbar-gutter-stable">
+                <div className="w-16 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                    {/* Corner text or empty */}
+                </div>
+                <div className="flex flex-1">
+                    {weekDays.map(date => {
+                        const isToday = isSameDay(date, new Date());
+                        return (
+                            <div key={date.toISOString()} className="flex-1 py-2 text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0">
+                                <div className="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">{format(date, 'EEE')}</div>
+                                <div className={cn("text-sm font-bold inline-block w-7 h-7 leading-7 rounded-full", isToday ? "bg-blue-600 text-white" : "text-gray-900 dark:text-slate-100")}>
+                                    {format(date, 'd')}
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
             {/* All Day Row */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 shrink-0 pl-16 bg-white dark:bg-slate-900 relative z-30 shadow-sm scrollbar-gutter-stable">
-                <div className="absolute left-0 top-0 bottom-0 w-16 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-40 flex items-center justify-center">
-                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider rotate-[-90deg]">
+            <div className="flex border-b border-slate-200 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 relative z-30 shadow-sm scrollbar-gutter-stable">
+                <div className="w-16 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center">
+                    <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider rotate-[-90deg] whitespace-nowrap">
                         All Day
                     </div>
                 </div>
-                {weekDays.map(date => {
-                    // Filter All Day Items
-                    const dayAllDayEvents = events.filter(e => {
-                        const start = new Date(e.start.date || e.start.dateTime!);
-                        return isSameDay(start, date) && (!!e.start.date || !e.start.dateTime);
-                    });
-                    const dayAllDayTasks = tasks.filter(t => {
-                        if (!t.scheduled_at) return false;
-                        const tDate = new Date(t.scheduled_at);
-                        return isSameDay(tDate, date) && tDate.getHours() === 0 && tDate.getMinutes() === 0;
-                    });
+                <div className="flex flex-1">
+                    {weekDays.map(date => {
+                        // Filter All Day Items
+                        const dayAllDayEvents = events.filter(e => {
+                            const start = new Date(e.start.date || e.start.dateTime!);
+                            return isSameDay(start, date) && (!!e.start.date || !e.start.dateTime);
+                        });
+                        const dayAllDayTasks = tasks.filter(t => {
+                            if (!t.scheduled_at) return false;
+                            const tDate = new Date(t.scheduled_at);
+                            return isSameDay(tDate, date) && tDate.getHours() === 0 && tDate.getMinutes() === 0;
+                        });
 
-                    return (
-                        <div key={date.toISOString()} className="flex-1 border-r border-slate-200 dark:border-slate-800 last:border-r-0 p-1 min-h-[32px]">
-                            <div className="flex flex-col gap-1">
-                                {dayAllDayEvents.map(event => (
-                                    <div
-                                        key={event.id}
-                                        className="text-[10px] px-1.5 py-0.5 rounded border-l-2 truncate font-medium cursor-pointer hover:opacity-80"
-                                        style={{
-                                            backgroundColor: `${event.displayColor}20`,
-                                            borderColor: event.displayColor,
-                                            color: '#1e293b'
-                                        }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedEvent(event);
-                                        }}
-                                    >
-                                        {event.summary}
-                                    </div>
-                                ))}
-                                {dayAllDayTasks.map(task => (
-                                    <div key={task.id}>
-                                        <TaskCard
-                                            task={task}
-                                            categories={categories}
-                                            onFocus={onFocus}
-                                            onEdit={onEdit}
-                                            isCompact={true}
-                                            onToggleComplete={onToggleComplete}
-                                            onUnschedule={onUnschedule}
-                                            onDelete={onDelete}
-                                        />
-                                    </div>
-                                ))}
+                        return (
+                            <div key={date.toISOString()} className="flex-1 border-r border-slate-200 dark:border-slate-800 last:border-r-0 p-1 min-h-[50px] transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                                <div className="flex flex-col gap-1">
+                                    {dayAllDayEvents.map(event => (
+                                        <div
+                                            key={event.id}
+                                            className="text-[10px] px-1.5 py-1 rounded border-l-2 truncate font-medium cursor-pointer hover:opacity-80 shadow-sm"
+                                            style={{
+                                                backgroundColor: `${event.displayColor}20`,
+                                                borderColor: event.displayColor,
+                                                color: '#1e293b'
+                                            }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedEvent(event);
+                                            }}
+                                        >
+                                            {event.summary}
+                                        </div>
+                                    ))}
+                                    {dayAllDayTasks.map(task => (
+                                        <div key={task.id}>
+                                            <TaskCard
+                                                task={task}
+                                                categories={categories}
+                                                onFocus={onFocus}
+                                                onEdit={onEdit}
+                                                isCompact={true}
+                                                onToggleComplete={onToggleComplete}
+                                                onUnschedule={onUnschedule}
+                                                onDelete={onDelete}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Scrollable Grid */}
