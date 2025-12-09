@@ -28,10 +28,14 @@ export function NotificationManager({ tasks }: NotificationManagerProps) {
 
                 // If task is scheduled in the past (missed) and we haven't notified yet
                 if (scheduledTime < now && !notifiedTasks.current.has(task.id)) {
-                    new Notification('Missed Task', {
-                        body: `You missed: ${task.title}`,
-                        icon: '/favicon.ico' // Fallback icon
-                    });
+                    try {
+                        new Notification('Missed Task', {
+                            body: `You missed: ${task.title}`,
+                            icon: '/favicon.ico' // Fallback icon
+                        });
+                    } catch (e) {
+                        console.error('Failed to create notification:', e);
+                    }
 
                     notifiedTasks.current.add(task.id);
                 }
