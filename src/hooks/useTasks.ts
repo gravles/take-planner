@@ -58,6 +58,11 @@ export function useTasks() {
             let externalId = null;
             let source = newTask.source || 'supabase';
 
+            // Default to Microsoft To Do if connected and no specific category is chosen
+            if (!newTask.category_id && msToken && !newTask.source) {
+                source = 'microsoft_todo';
+            }
+
             // Check if category belongs to Microsoft To Do
             if (newTask.category_id && msToken) {
                 const { data: category } = await supabase
