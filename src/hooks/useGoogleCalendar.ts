@@ -60,6 +60,7 @@ export function useGoogleCalendar() {
 
                     const data = await response.json();
                     const items = data.items || [];
+                    console.log(`[useGoogleCalendar] Fetched ${items.length} events for ${label}`);
 
                     // Tag items with metadata
                     const taggedItems = items.map((item: any) => ({
