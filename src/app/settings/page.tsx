@@ -168,11 +168,13 @@ export default function SettingsPage() {
 
                             {/* Connected Accounts List */}
                             {googleTokens.length > 0 && (
+                                {/* Connected Accounts List */ }
+                            {googleTokens.length > 0 && (
                                 <div className="space-y-2 mt-2">
                                     {googleTokens.map((t, idx) => (
                                         <div key={idx} className="flex items-center justify-between pl-14 pr-2 bg-slate-50 rounded-md py-1 border border-slate-100">
                                             <span className="text-xs text-slate-700 font-mono">
-                                                {t.account_email}
+                                                {t.account_email || 'Primary/Legacy Account'}
                                             </span>
                                             <button
                                                 onClick={() => handleDisconnect('google', t.account_email)}
@@ -183,6 +185,11 @@ export default function SettingsPage() {
                                         </div>
                                     ))}
                                 </div>
+                            )}
+                            {/* Debug Info (Temporary) */}
+                            <div className="text-[10px] text-gray-300 pl-14 hidden">
+                                Debug: {googleTokens.length} tokens found.
+                            </div>
                             )}
                         </div>
 

@@ -58,7 +58,14 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
                 .eq('provider', provider);
 
             if (data) {
+                console.log(`[useIntegrationToken] Loaded ${data.length} tokens for ${provider}`, data);
                 setTokens(data);
+            } else {
+                console.log(`[useIntegrationToken] No data found for ${provider}`);
+            }
+
+            if (error) {
+                console.error(`[useIntegrationToken] Error fetching ${provider}:`, error);
             }
         } catch (error) {
             console.error(`Error fetching ${provider} tokens:`, error);

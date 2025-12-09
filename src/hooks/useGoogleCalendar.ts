@@ -45,51 +45,21 @@ export function useGoogleCalendar() {
                         `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`,
                         {
                             headers: {
-                                Authorization: `Bearer ${access_token}`,
-                            },
-                        }
-                    );
-
-                    if (!response.ok) {
-                        console.warn(`Failed to fetch events for ${account_email}: ${response.statusText}`);
-                        continue; // Skip failing accounts
-                    }
-
-                    const data = await response.json();
-                    const items = data.items || [];
-
-                    // Tag items with metadata
-                    const taggedItems = items.map((item: any) => ({
-                        ...item,
-                        account_email,
-                        displayColor: color
-                    }));
-
-                    allEvents.push(...taggedItems);
-
-                } catch (innerErr) {
-                    console.error(`Error fetching for ${account_email}`, innerErr);
+                                setError(err.message);
+                } finally {
+                    setLoading(false);
                 }
-            }
+            };
 
-            setEvents(allEvents);
-        } catch (err: any) {
-            console.error('Error fetching Google Calendar events:', err);
-            setError(err.message);
-        } finally {
-            setLoading(false);
+            // Auto-fetch when tokens are available
+            useEffect(() => {
+                if (tokens.length > 0) {
+                    const now = new Date();
+                    const end = new Date();
+                    end.setDate(end.getDate() + 7); // Fetch next 7 days by default
+                    fetchEvents(now, end);
+                }
+            }, [tokens]);
+
+            return { events, loading: loading || tokenLoading, error, fetchEvents };
         }
-    };
-
-    // Auto-fetch when tokens are available
-    useEffect(() => {
-        if (tokens.length > 0) {
-            const now = new Date();
-            const end = new Date();
-            end.setDate(end.getDate() + 7); // Fetch next 7 days by default
-            fetchEvents(now, end);
-        }
-    }, [tokens]);
-
-    return { events, loading: loading || tokenLoading, error, fetchEvents };
-}
