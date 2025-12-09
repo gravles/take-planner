@@ -45,7 +45,7 @@ function CallbackContent() {
                     console.log('[AuthCallback] Session Provider Token (first 10):', session.provider_token.substring(0, 10));
 
                     finalToken = session.provider_token;
-                    finalRefreshToken = session.provider_refresh_token;
+                    finalRefreshToken = session.provider_refresh_token || null;
                 } else {
                     console.error('[AuthCallback] No token found in Hash OR Session.');
                     setStatus('Error: Could not retrieve connection token.');
