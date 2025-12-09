@@ -88,6 +88,42 @@ export default function SettingsPage() {
         }
     }
 
+    async function handleConnect(provider: 'google' | 'azure') {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const callbackUrl = `${window.location.origin}/settings/callback?provider=${provider}`;
+
+            if (session) {
+                const { data, error } = await supabase.auth.linkIdentity({
+                    provider: provider,
+                    options: {
+                        redirectTo: callbackUrl,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
+                        queryParams: {
+                            prompt: 'select_account'
+                        }
+                    }
+                });
+                if (error) throw error;
+            } else {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: provider,
+                    options: {
+                        redirectTo: callbackUrl,
+                        scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
+                        queryParams: {
+                            prompt: 'select_account'
+                        }
+                    }
+                });
+                if (error) throw error;
+            }
+        } catch (error: any) {
+            console.error('Error connecting account:', error);
+            setMessage({ type: 'error', text: 'Error connecting account: ' + error.message });
+        }
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
