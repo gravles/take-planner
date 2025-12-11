@@ -100,7 +100,8 @@ export default function SettingsPage() {
                         redirectTo: callbackUrl,
                         scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
                         queryParams: {
-                            prompt: 'select_account'
+                            access_type: 'offline',
+                            prompt: 'consent'
                         }
                     }
                 });
@@ -112,7 +113,8 @@ export default function SettingsPage() {
                         redirectTo: callbackUrl,
                         scopes: provider === 'azure' ? 'openid profile email User.Read Tasks.ReadWrite offline_access' : 'https://www.googleapis.com/auth/calendar.events.readonly',
                         queryParams: {
-                            prompt: 'select_account'
+                            access_type: 'offline',
+                            prompt: 'consent'
                         }
                     }
                 });

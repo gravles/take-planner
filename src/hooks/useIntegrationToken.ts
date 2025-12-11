@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 
 export interface IntegrationToken {
     access_token: string;
+    refresh_token?: string | null;
+    expires_at?: string | null;
     account_email: string;
     is_primary: boolean;
 }
@@ -73,13 +75,39 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
 
             const { data, error } = await supabase
                 .from('user_integrations')
-                .select('access_token, account_email, is_primary')
+                .select('access_token, refresh_token, expires_at, account_email, is_primary')
                 .eq('user_id', session.user.id)
                 .eq('provider', provider);
 
             if (data) {
                 console.log(`[useIntegrationToken] Loaded ${data.length} tokens for ${provider}`);
-                setTokens(data);
+
+                // Check for expiration and refresh if needed
+                const validTokens = await Promise.all(data.map(async (t: any) => {
+                    const expiresAt = t.expires_at ? new Date(t.expires_at) : null;
+                    // Refresh if expired or expiring in < 5 minutes
+                    if (expiresAt && expiresAt < new Date(Date.now() + 5 * 60 * 1000)) {
+                        console.log(`[useIntegrationToken] Token for ${t.account_email} is expired/expiring. Refreshing...`);
+                        try {
+                            const newTokens = await refreshAccessToken(provider, t.refresh_token);
+                            if (newTokens) {
+                                // Update DB
+                                await saveToken(session.user.id, provider, newTokens.access_token, newTokens.refresh_token);
+                                return {
+                                    ...t,
+                                    access_token: newTokens.access_token,
+                                    refresh_token: newTokens.refresh_token || t.refresh_token,
+                                    expires_at: new Date(Date.now() + (newTokens.expires_in * 1000)).toISOString()
+                                };
+                            }
+                        } catch (e) {
+                            console.error(`[useIntegrationToken] Refresh failed for ${t.account_email}:`, e);
+                        }
+                    }
+                    return t;
+                }));
+
+                setTokens(validTokens);
             } else {
                 console.log(`[useIntegrationToken] No data found for ${provider}`);
             }
@@ -92,6 +120,17 @@ export function useIntegrationToken(provider: 'google' | 'azure') {
         } finally {
             setLoading(false);
         }
+    };
+
+    const refreshAccessToken = async (provider: string, refreshToken?: string | null) => {
+        if (!refreshToken) return null;
+        const res = await fetch('/api/refresh-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, refresh_token: refreshToken })
+        });
+        if (!res.ok) throw new Error('Refresh failed');
+        return await res.json();
     };
 
     const saveToken = async (userId: string, provider: string, accessToken: string, refreshToken?: string | null) => {

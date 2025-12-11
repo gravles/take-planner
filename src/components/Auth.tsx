@@ -12,8 +12,12 @@ export function Auth() {
                 provider,
                 options: {
                     scopes: provider === 'azure'
-                        ? 'Tasks.ReadWrite User.Read'
+                        ? 'Tasks.ReadWrite User.Read offline_access'
                         : 'https://www.googleapis.com/auth/calendar.events.readonly',
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
                     redirectTo: window.location.origin,
                 },
             });
