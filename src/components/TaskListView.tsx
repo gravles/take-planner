@@ -1,6 +1,7 @@
 import { Task, Category } from '@/types';
 import { TaskCard } from './TaskCard';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface TaskListViewProps {
     tasks: Task[];
@@ -92,6 +93,30 @@ export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleCompl
             </div>
         );
     };
+
+    if (tasks.length === 0) {
+        return (
+            <div className="flex-1 h-full flex flex-col items-center justify-center bg-white dark:bg-slate-950/50 p-8">
+                <div className="max-w-md text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+                    <div className="relative w-72 h-72 mx-auto">
+                        <Image
+                            src="/images/empty-state.png"
+                            alt="No tasks"
+                            fill
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">No Tasks!</h2>
+                        <p className="text-slate-500 dark:text-slate-400">
+                            You're all caught up. Enjoy the break or add a new task to get started.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 h-screen overflow-y-auto bg-white dark:bg-slate-950/50 p-8">

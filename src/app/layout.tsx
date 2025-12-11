@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Task Planner",
   description: "A smart task planner integrating Google Calendar and Microsoft To Do.",
+  icons: {
+    icon: '/icon.png',
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
