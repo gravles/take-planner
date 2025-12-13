@@ -17,7 +17,7 @@ interface TaskCardProps {
     showTime?: boolean;
 }
 
-export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, isCompact, showTime }: TaskCardProps) {
+export function TaskCard({ task, categories = [], onFocus, onEdit, onSelect, onToggleComplete, onUnschedule, onDelete, isCompact, showTime }: TaskCardProps) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: task,
