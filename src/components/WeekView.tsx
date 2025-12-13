@@ -209,7 +209,7 @@ function organizeEvents(items: LayoutItem[]): LayoutItem[] {
 }
 
 
-function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick }: {
+function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick, onSelectTask }: {
     date: Date;
     tasks: Task[];
     categories?: Category[];
