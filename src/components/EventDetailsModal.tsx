@@ -1,7 +1,7 @@
 
 import { GoogleEvent } from '@/hooks/useGoogleCalendar';
 import { Task, Category } from '@/types';
-import { X, Calendar, MapPin, AlignLeft, ExternalLink, checkCircle, Trash2, CheckCircle, Pencil, Clock } from 'lucide-react';
+import { X, Calendar, MapPin, AlignLeft, ExternalLink, Trash2, CheckCircle, Pencil, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
