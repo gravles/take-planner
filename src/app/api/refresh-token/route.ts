@@ -36,6 +36,20 @@ export async function POST(request: Request) {
 
         console.log(`[API] Refreshing token for ${provider}...`);
 
+        // DEBUG: Check for missing env vars
+        const missingVars = [];
+        if (provider === 'google') {
+            if (!process.env.GOOGLE_CLIENT_ID) missingVars.push('GOOGLE_CLIENT_ID');
+            if (!process.env.GOOGLE_CLIENT_SECRET) missingVars.push('GOOGLE_CLIENT_SECRET');
+        } else if (provider === 'azure') {
+            if (!process.env.AZURE_CLIENT_ID) missingVars.push('AZURE_CLIENT_ID');
+            if (!process.env.AZURE_CLIENT_SECRET) missingVars.push('AZURE_CLIENT_SECRET');
+        }
+        if (missingVars.length > 0) {
+            console.error(`[API] CRITICAL: Missing environment variables for ${provider}:`, missingVars.join(', '));
+            return NextResponse.json({ error: `Server configuration error: Missing ${missingVars.join(', ')}` }, { status: 500 });
+        }
+
         // Convert body to URLSearchParams for x-www-form-urlencoded
         const params = new URLSearchParams();
         for (const key in body) {
@@ -53,8 +67,9 @@ export async function POST(request: Request) {
         const data = await response.json();
 
         if (!response.ok) {
-            console.error('[API] Refresh failed:', data);
-            return NextResponse.json({ error: data.error_description || data.error || 'Refresh failed' }, { status: response.status });
+            console.error('[API] Refresh failed. Status:', response.status);
+            console.error('[API] Provider Response:', JSON.stringify(data, null, 2));
+            return NextResponse.json({ error: data.error_description || data.error || 'Refresh failed', details: data }, { status: response.status });
         }
 
         // Return the new tokens. Google returns `expires_in` (seconds).
