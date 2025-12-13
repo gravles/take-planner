@@ -29,6 +29,7 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
     onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
     onEventClick: (event: GoogleEvent) => void;
+    onSelectTask: (task: Task) => void;
 }) {
     const { setNodeRef } = useDroppable({
         id: `day-${format(date, 'yyyy-MM-dd')}`,
@@ -84,6 +85,7 @@ function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, on
                             onUnschedule={onUnschedule}
                             onDelete={onDelete}
                             isCompact
+                            onSelect={onSelectTask}
                         />
                     </div>
                 ))}
@@ -101,12 +103,21 @@ export function MonthView({ currentDate, tasks, categories = [], events = [], on
     const calendarStart = startOfWeek(monthStart);
     const calendarEnd = endOfWeek(monthEnd);
     const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
+            <EventDetailsModal
+                event={selectedEvent}
+                task={selectedTask}
+                categories={categories}
+                onClose={() => { setSelectedEvent(null); setSelectedTask(null); }}
+                onToggleComplete={onToggleComplete}
+                onDelete={onDelete}
+                onEdit={onEdit}
+            />
             <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                     <div key={day} className="p-2 text-center text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase">
@@ -139,6 +150,7 @@ export function MonthView({ currentDate, tasks, categories = [], events = [], on
                             onUnschedule={onUnschedule}
                             onDelete={onDelete}
                             onEventClick={(e) => setSelectedEvent(e)}
+                            onSelectTask={setSelectedTask}
                         />
                     );
                 })}

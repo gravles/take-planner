@@ -50,10 +50,19 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
     // Generate time slots from 7 AM to 11 PM
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
     const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     return (
         <div className="flex-1 h-screen overflow-y-auto bg-white/50 dark:bg-slate-950/50 p-6">
-            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
+            <EventDetailsModal
+                event={selectedEvent}
+                task={selectedTask}
+                categories={categories}
+                onClose={() => { setSelectedEvent(null); setSelectedTask(null); }}
+                onToggleComplete={onToggleComplete}
+                onDelete={onDelete}
+                onEdit={onEdit}
+            />
             <h2 className="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-100 tracking-tight">Today's Schedule</h2>
 
             {/* All Day Section */}
@@ -102,6 +111,7 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                                 onToggleComplete={onToggleComplete}
                                 onUnschedule={onUnschedule}
                                 onDelete={onDelete}
+                                onSelect={setSelectedTask}
                             />
                         </div>
                     ))}
@@ -171,6 +181,7 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
                                                 onToggleComplete={onToggleComplete}
                                                 onUnschedule={onUnschedule}
                                                 onDelete={onDelete}
+                                                onSelect={setSelectedTask}
                                             />
                                         </div>
                                     );

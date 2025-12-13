@@ -220,6 +220,7 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
     onEventClick: (event: GoogleEvent) => void;
+    onSelectTask: (task: Task) => void;
 }) {
     const { setNodeRef } = useDroppable({
         id: `day-${format(date, 'yyyy-MM-dd')}`,
@@ -350,6 +351,7 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
                                 onDelete={onDelete}
                                 isCompact
                                 showTime={false}
+                                onSelect={onSelectTask}
                             />
                         </div>
                     );
@@ -367,10 +369,19 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 17 }, (_, i) => i + 7);
     const [selectedEvent, setSelectedEvent] = useState<GoogleEvent | null>(null);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     return (
         <div className="flex h-full overflow-hidden flex-col">
-            <EventDetailsModal event={selectedEvent!} onClose={() => setSelectedEvent(null)} />
+            <EventDetailsModal
+                event={selectedEvent}
+                task={selectedTask}
+                categories={categories}
+                onClose={() => { setSelectedEvent(null); setSelectedTask(null); }}
+                onToggleComplete={onToggleComplete}
+                onDelete={onDelete}
+                onEdit={onEdit}
+            />
             {/* Header */}
             <div className="flex border-b bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shrink-0 scrollbar-gutter-stable">
                 <div className="w-16 flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
@@ -442,6 +453,7 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
                                                 onToggleComplete={onToggleComplete}
                                                 onUnschedule={onUnschedule}
                                                 onDelete={onDelete}
+                                                onSelect={setSelectedTask}
                                             />
                                         </div>
                                     ))}
@@ -488,6 +500,7 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
                                 onUnschedule={onUnschedule}
                                 onDelete={onDelete}
                                 onEventClick={(e) => setSelectedEvent(e)}
+                                onSelectTask={setSelectedTask}
                             />
                         );
                     })}

@@ -9,6 +9,7 @@ interface TaskCardProps {
     categories?: Category[];
     onFocus?: (task: Task) => void;
     onEdit?: (task: Task) => void;
+    onSelect?: (task: Task) => void;
     onToggleComplete?: (task: Task) => void;
     onUnschedule?: (task: Task) => void;
     onDelete?: (task: Task) => void;
@@ -73,7 +74,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
                     cardClasses,
                     "min-h-[24px] cursor-pointer hover:ring-1 hover:ring-slate-200" // Slightly taller for better touch
                 )}
-                onClick={() => onEdit && onEdit(task)}
+                onClick={() => onSelect ? onSelect(task) : onEdit && onEdit(task)}
             >
                 {/* Priority Dot */}
                 {!isCompleted && (
@@ -131,7 +132,7 @@ export function TaskCard({ task, categories = [], onFocus, onEdit, onToggleCompl
             {...listeners}
             {...attributes}
             className={cn(cardClasses, "cursor-pointer hover:ring-1 hover:ring-slate-200 dark:hover:ring-slate-700")}
-            onClick={() => onEdit && onEdit(task)}
+            onClick={() => onSelect ? onSelect(task) : onEdit && onEdit(task)}
         >
             <div className="flex justify-between items-start mb-1.5 gap-2">
                 <div className="flex items-start gap-2.5 flex-1 min-w-0">

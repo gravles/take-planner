@@ -2,6 +2,9 @@ import { Task, Category } from '@/types';
 import { TaskCard } from './TaskCard';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { format, isBefore, isToday, isTomorrow, isThisWeek, addDays, startOfDay, parseISO } from 'date-fns';
+import { useState } from 'react';
+import { EventDetailsModal } from './EventDetailsModal';
 
 interface TaskListViewProps {
     tasks: Task[];
@@ -14,87 +17,79 @@ interface TaskListViewProps {
 }
 
 export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete }: TaskListViewProps) {
-    const unscheduledTasks = tasks.filter(t => !t.scheduled_at && t.status !== 'completed');
-    const scheduledTasks = tasks.filter(t => t.scheduled_at && t.status !== 'completed');
-    const completedTasks = tasks
-        .filter(t => t.status === 'completed')
-        .sort((a, b) => {
-            if (!a.completed_at && !b.completed_at) return 0;
-            if (!a.completed_at) return 1;
-            if (!b.completed_at) return -1;
-            return new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime();
-        });
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-    const renderTaskGroup = (groupTasks: Task[]) => {
-        // Group by category
-        const categorized: Record<string, Task[]> = {};
-        const uncategorized: Task[] = [];
+    // Filter out completed tasks (or maybe show them in a history section? For now, hide/separate)
+    // The "Upcoming" view usually focuses on active tasks.
+    const activeTasks = tasks.filter(t => t.status !== 'completed');
 
-        groupTasks.forEach(task => {
-            if (task.category_id) {
-                if (!categorized[task.category_id]) categorized[task.category_id] = [];
-                categorized[task.category_id].push(task);
-            } else {
-                uncategorized.push(task);
-            }
-        });
+    // Grouping
+    const groups = {
+        overdue: [] as Task[],
+        today: [] as Task[],
+        tomorrow: [] as Task[],
+        thisWeek: [] as Task[],
+        later: [] as Task[],
+        unscheduled: [] as Task[]
+    };
+
+    const now = new Date();
+    const todayStart = startOfDay(now);
+
+    activeTasks.forEach(task => {
+        if (!task.scheduled_at) {
+            groups.unscheduled.push(task);
+            return;
+        }
+
+        const date = new Date(task.scheduled_at);
+
+        if (isBefore(date, todayStart)) {
+            groups.overdue.push(task);
+        } else if (isToday(date)) {
+            groups.today.push(task);
+        } else if (isTomorrow(date)) {
+            groups.tomorrow.push(task);
+        } else if (isThisWeek(date, { weekStartsOn: 1 })) { // Adjust week start as needed
+            groups.thisWeek.push(task);
+        } else {
+            groups.later.push(task);
+        }
+    });
+
+    // Helper to render a group
+    const renderGroup = (title: string, groupTasks: Task[], colorClass: string, emptyMessage?: string) => {
+        if (groupTasks.length === 0) return null;
 
         return (
-            <div className="space-y-6">
-                {/* Uncategorized */}
-                {uncategorized.length > 0 && (
-                    <div className="space-y-2">
-                        {categories.length > 0 && <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">No Category</h4>}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {uncategorized.map(task => (
-                                <div key={task.id} className="h-32">
-                                    <TaskCard
-                                        task={task}
-                                        onFocus={onFocus}
-                                        onEdit={onEdit}
-                                        onToggleComplete={onToggleComplete}
-                                        onUnschedule={onUnschedule}
-                                        onDelete={onDelete}
-                                    />
-                                </div>
-                            ))}
+            <div className="space-y-3">
+                <h3 className={cn("text-sm font-bold uppercase tracking-wider flex items-center gap-2 sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur py-2 z-10", colorClass)}>
+                    {title}
+                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        {groupTasks.length}
+                    </span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                    {groupTasks.map(task => (
+                        <div key={task.id} className="h-full">
+                            <TaskCard
+                                task={task}
+                                categories={categories}
+                                onFocus={onFocus}
+                                onEdit={onEdit}
+                                onToggleComplete={onToggleComplete}
+                                onUnschedule={onUnschedule}
+                                onDelete={onDelete}
+                                onSelect={setSelectedTask}
+                            />
                         </div>
-                    </div>
-                )}
-
-                {/* Categorized */}
-                {categories.map(category => {
-                    const catTasks = categorized[category.id];
-                    if (!catTasks || catTasks.length === 0) return null;
-
-                    return (
-                        <div key={category.id} className="space-y-2">
-                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
-                                {category.name}
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {catTasks.map(task => (
-                                    <div key={task.id} className="h-32">
-                                        <TaskCard
-                                            task={task}
-                                            onFocus={onFocus}
-                                            onEdit={onEdit}
-                                            onToggleComplete={onToggleComplete}
-                                            onUnschedule={onUnschedule}
-                                            onDelete={onDelete}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    );
-                })}
+                    ))}
+                </div>
             </div>
         );
     };
 
-    if (tasks.length === 0) {
+    if (activeTasks.length === 0 && tasks.length === 0) {
         return (
             <div className="flex-1 h-full flex flex-col items-center justify-center bg-white dark:bg-slate-950/50 p-8">
                 <div className="max-w-md text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
@@ -108,9 +103,9 @@ export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleCompl
                         />
                     </div>
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">No Tasks!</h2>
+                        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">All Clear!</h2>
                         <p className="text-slate-500 dark:text-slate-400">
-                            You're all caught up. Enjoy the break or add a new task to get started.
+                            You have no upcoming tasks. Enjoy your free time!
                         </p>
                     </div>
                 </div>
@@ -119,36 +114,28 @@ export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleCompl
     }
 
     return (
-        <div className="flex-1 h-screen overflow-y-auto bg-white dark:bg-slate-950/50 p-8">
-            <div className="max-w-5xl mx-auto space-y-12">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-slate-100">All Tasks</h2>
+        <div className="flex-1 h-full overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 p-4 md:p-8 scrollbar-gutter-stable">
+            <EventDetailsModal
+                task={selectedTask}
+                categories={categories}
+                onClose={() => setSelectedTask(null)}
+                onToggleComplete={onToggleComplete}
+                onDelete={onDelete}
+                onEdit={onEdit}
+            />
 
-                {/* Unscheduled Tasks */}
-                <section>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                        Unscheduled
-                        <span className="bg-gray-200 dark:bg-slate-800 text-gray-600 dark:text-slate-400 text-xs px-2 py-1 rounded-full">{unscheduledTasks.length}</span>
-                    </h3>
-                    {renderTaskGroup(unscheduledTasks)}
-                </section>
+            <div className="max-w-6xl mx-auto space-y-8 pb-20">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Upcoming Tasks</h2>
+                </div>
 
-                {/* Scheduled Tasks */}
-                <section>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                        Scheduled
-                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-xs px-2 py-1 rounded-full">{scheduledTasks.length}</span>
-                    </h3>
-                    {renderTaskGroup(scheduledTasks)}
-                </section>
+                {renderGroup("Overdue", groups.overdue, "text-rose-600 dark:text-rose-400")}
+                {renderGroup("Today", groups.today, "text-blue-600 dark:text-blue-400")}
+                {renderGroup("Tomorrow", groups.tomorrow, "text-amber-600 dark:text-amber-400")}
+                {renderGroup("This Week", groups.thisWeek, "text-slate-600 dark:text-slate-400")}
+                {renderGroup("Later", groups.later, "text-slate-500 dark:text-slate-500")}
 
-                {/* Completed Tasks */}
-                <section>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-slate-200 mb-4 flex items-center gap-2">
-                        Completed
-                        <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs px-2 py-1 rounded-full">{completedTasks.length}</span>
-                    </h3>
-                    {renderTaskGroup(completedTasks)}
-                </section>
+                {renderGroup("Unscheduled", groups.unscheduled, "text-slate-400 dark:text-slate-500")}
             </div>
         </div>
     );
