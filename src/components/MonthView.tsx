@@ -17,7 +17,7 @@ interface MonthViewProps {
     onDelete?: (task: Task) => void;
 }
 
-function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick }: {
+function MonthDay({ date, tasks, categories, events, isCurrentMonth, onFocus, onEdit, onToggleComplete, onUnschedule, onDelete, onEventClick, onSelectTask }: {
     date: Date;
     tasks: Task[];
     categories?: Category[];
