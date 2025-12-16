@@ -285,7 +285,7 @@ function WeekColumn({ date, tasks, categories, events, onFocus, onEdit, onToggle
     const laidOutItems = organizeEvents([...eventItems, ...taskItems]);
 
     return (
-        <div ref={setNodeRef} className="flex-1 min-w-[120px] border-r border-slate-200 dark:border-slate-800 last:border-r-0 relative bg-white dark:bg-slate-900">
+        <div ref={setNodeRef} className="flex-1 border-r border-slate-200 dark:border-slate-800 last:border-r-0 relative bg-white dark:bg-slate-900">
             {/* Hour grid lines */}
             {hours.map(hour => (
                 <div key={hour} className="h-[60px] border-b border-gray-50 dark:border-slate-800/50 box-border w-full" />
