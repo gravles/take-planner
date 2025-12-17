@@ -108,7 +108,7 @@ export function MonthView({ currentDate, tasks, categories = [], events = [], on
     const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
     return (
-        <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex flex-col min-h-0 overflow-hidden flex-1">
             <EventDetailsModal
                 event={selectedEvent}
                 task={selectedTask}

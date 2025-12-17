@@ -372,7 +372,7 @@ export function WeekView({ currentDate, tasks, categories = [], events = [], onF
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     return (
-        <div className="flex h-full overflow-hidden flex-col">
+        <div className="flex min-h-0 overflow-hidden flex-col flex-1">
             <EventDetailsModal
                 event={selectedEvent}
                 task={selectedTask}

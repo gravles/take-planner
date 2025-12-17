@@ -114,7 +114,7 @@ export function TaskListView({ tasks, categories, onFocus, onEdit, onToggleCompl
     }
 
     return (
-        <div className="flex-1 h-full overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 p-4 md:p-8 scrollbar-gutter-stable">
+        <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 p-4 md:p-8 scrollbar-gutter-stable">
             <EventDetailsModal
                 task={selectedTask}
                 categories={categories}

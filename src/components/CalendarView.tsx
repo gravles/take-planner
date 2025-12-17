@@ -53,7 +53,7 @@ export function CalendarView({ tasks, categories = [], events = [], onFocus, onE
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     return (
-        <div className="flex-1 h-screen overflow-y-auto bg-white/50 dark:bg-slate-950/50 p-6">
+        <div className="flex-1 min-h-0 overflow-y-auto bg-white/50 dark:bg-slate-950/50 p-6">
             <EventDetailsModal
                 event={selectedEvent}
                 task={selectedTask}
